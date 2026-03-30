@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniConnect — Home</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <section class="hero">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge"><span data-icon="check"></span> A Verified Ecosystem — Not Just Social Media</div>
+        <h1>The Home for<br><span class="gradient-text">Foreign Students</span><br>in Russia</h1>
+        <p>Connect with verified students, access paid services before arrival, earn money as a student, and join your country's exclusive community.</p>
+        <div class="hero-buttons">
+          <a href="/register.html" class="btn btn-primary">Get Started →</a>
+          <a href="#features" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">✨ Core Features</span>
+        <h2 class="section-title">What Makes Us Unique</h2>
+        <p class="section-subtitle">Entities and systems that don't exist in any social media platform.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon blue"><span data-icon="shield"></span></div>
+          <h3>Document Verification</h3>
+          <p>Students upload university documents verified by admins and university representatives.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon purple"><span data-icon="globe"></span></div>
+          <h3>Country-Based Groups</h3>
+          <p>Exclusive communities for each nationality, gated by verification.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon cyan"><span data-icon="briefcase"></span></div>
+          <h3>Service Marketplace</h3>
+          <p>Book airport pickup, consultations, and more with secure payments.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon green"><span data-icon="money"></span></div>
+          <h3>Student Micro-Economy</h3>
+          <p>Students earn real money by accepting and completing service offers.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon orange"><span data-icon="bank"></span></div>
+          <h3>Money Transfers</h3>
+          <p>Built-in transfers with 2% fee for subscribers, 5% for others.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon pink"><span data-icon="handshake"></span></div>
+          <h3>University Partnerships</h3>
+          <p>Direct B2B relationships. We earn 10% of first-year tuition per student.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">© 2026 UniConnect — Bachelor Thesis Project</div>
+  </footer>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    async function init() {
+      const user = await checkAuth();
+      Sidebar.render(user, 'home');
+    }
+    init();
+  </script>
+</body>
+</html>
