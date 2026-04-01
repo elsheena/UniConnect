@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="auth-page">
+    <div class="auth-card wide">
+      <h1>Create Your Account</h1>
+      <p class="subtitle">Join the verified ecosystem for foreign students in Russia</p>
+
+      <div class="role-selector" id="role-selector">
+        <div class="role-option" data-role="student" onclick="selectRole('student')">
+          <div class="role-emoji"><span data-icon="logo"></span></div>
+          <h3>Student</h3>
+          <p>I'm currently studying in Russia</p>
+        </div>
+        <div class="role-option" data-role="applicant" onclick="selectRole('applicant')">
+          <div class="role-emoji"><span data-icon="applicant"></span></div>
+          <h3>Applicant</h3>
+          <p>I want to study in Russia</p>
+        </div>
+      </div>
+
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="+7-XXX-XXX-XXXX">
+        </div>
+
+        <div class="form-group">
+          <label for="nationality">Nationality</label>
+          <select id="nationality"><option value="">Select your country...</option></select>
+        </div>
+
+        <div id="student-fields" style="display:none;">
+          <div class="form-group">
+            <label for="university">University</label>
+            <select id="university"><option value="">Select your university...</option></select>
+          </div>
+        </div>
+
+        <input type="hidden" id="selected-role" value="">
+        <button type="submit" class="btn btn-primary btn-full" id="register-btn" disabled>
+          Select a role to continue
+        </button>
+      </form>
+
+      <!-- Step 2: Document Upload (Required) -->
+      <form id="upload-form" onsubmit="handleUpload(event)" style="display:none; text-align:center;">
+        <div class="empty-state" style="padding: 20px;">
+          <div class="empty-icon"><span data-icon="document"></span></div>
+          <h3 id="upload-title">Step 2: Verify Your Identity</h3>
+          <p id="upload-subtitle">Please upload your ID or Passport to continue.</p>
+        </div>
+        
+        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px;">
+          <!-- ID Document (For everyone) -->
+          <label class="btn btn-secondary btn-full" style="cursor:pointer;" id="label-id">
+            <span data-icon="paperclip"></span> Upload ID / Passport
+            <input type="file" id="id-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none;" onchange="updateFileName(this, 'label-id')">
+          </label>
+
+          <!-- Student Document (For students only) -->
+          <label class="btn btn-secondary btn-full" style="cursor:pointer; display:none;" id="label-student">
+            <span data-icon="paperclip"></span> Upload Student Card
+            <input type="file" id="student-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none;" onchange="updateFileName(this, 'label-student')">
+          </label>
+
+          <!-- Profile Picture (For everyone) -->
+          <label class="btn btn-secondary btn-full" style="cursor:pointer;" id="label-avatar">
+            <span data-icon="user"></span> Upload Profile Picture
+            <input type="file" id="avatar-file" accept="image/*" style="display:none;" onchange="updateFileName(this, 'label-avatar')">
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="upload-submit-btn">Upload & Complete</button>
+      </form>
+
+      <div class="auth-footer" id="auth-footer">
+        Already have an account? <a href="/login.html">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let selectedRole = '';
+    let newUserId = null;
+
+    async function initRegister() {
+      const data = await API.me().catch(() => null);
+      if (data && data.user) return window.location.href = '/profile.html';
+      Sidebar.render(null, 'register');
+    }
+    initRegister();
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.getElementById('selected-role').value = role;
+      document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
+      document.querySelector(`[data-role="${role}"]`).classList.add('selected');
+      document.getElementById('student-fields').style.display = role === 'student' ? 'block' : 'none';
+      const btn = document.getElementById('register-btn');
+      btn.disabled = false;
+      btn.textContent = role === 'student' ? 'Register as Student' : 'Register as Applicant';
+    }
+
+    async function loadFormData() {
+      try {
+        const [uniData, countryData] = await Promise.all([
+          API.getUniversities(),
+          API.getCountries()
+        ]);
+        const uniSelect = document.getElementById('university');
+        uniData.universities.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${u.name} — ${u.city}`;
+          uniSelect.appendChild(opt);
+        });
+        const natSelect = document.getElementById('nationality');
+        countryData.countries.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.name;
+          opt.textContent = c.name; // Removed ${c.flag} since it was undefined
+          natSelect.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Failed to load form data:', e);
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      if (!selectedRole) return showToast('Please select a role.', 'error');
+
+      const data = {
+        fullName: document.getElementById('fullName').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        phoneNumber: document.getElementById('phone').value,
+        role: selectedRole
+      };
+
+      data.nationality = document.getElementById('nationality').value;
+      if (!data.nationality) {
+        return showToast('Please select your nationality.', 'error');
+      }
+
+      if (selectedRole === 'student') {
+        data.universityId = document.getElementById('university').value;
+        if (!data.universityId) {
+          return showToast('Please select your university.', 'error');
+        }
+      }
+
+      try {
+        const res = await API.register(data);
+        newUserId = res.user.id;
+        
+        showToast('Account created! Proceeding to Step 2...');
+        document.getElementById('role-selector').style.display = 'none';
+        document.getElementById('register-form').style.display = 'none';
+        document.getElementById('auth-footer').style.display = 'none';
+        document.querySelector('h1').textContent = 'Verify Your Identity';
+        
+        const subtitle = document.querySelector('.subtitle');
+        if (selectedRole === 'student') {
+          subtitle.textContent = 'Upload your Passport, Student Card, and Profile Picture';
+          document.getElementById('label-student').style.display = 'flex';
+          document.getElementById('upload-subtitle').textContent = 'Please upload all required documents to become a verified student.';
+        } else {
+          subtitle.textContent = 'Upload your Passport and Profile Picture to complete setup';
+          document.getElementById('upload-subtitle').textContent = 'Please upload your ID or Passport and a Profile Picture for verification.';
+        }
+        document.getElementById('upload-form').style.display = 'block';
+      } catch (err) {
+        showToast(err.error || 'Registration failed.', 'error');
+      }
+    }
+
+    function updateFileName(input, labelId) {
+      if (input.files.length > 0) {
+        document.getElementById(labelId).innerHTML = `<span data-icon="check"></span> ${input.files[0].name}`;
+        // Re-render check icon
+        const el = document.getElementById(labelId).querySelector('[data-icon]');
+        el.innerHTML = getIcon('check', 18);
+      }
+    }
+
+    async function handleUpload(e) {
+      e.preventDefault();
+      const idFile = document.getElementById('id-file').files[0];
+      const studentFile = document.getElementById('student-file').files[0];
+      const avatarFile = document.getElementById('avatar-file').files[0];
+
+      if (!idFile) return showToast('Please upload your ID/Passport.', 'error');
+      if (selectedRole === 'student' && !studentFile) {
+        return showToast('Please upload your Student Card.', 'error');
+      }
+      if (!avatarFile) return showToast('Please upload a Profile Picture.', 'error');
+
+      const btn = document.getElementById('upload-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Uploading...';
+
+      try {
+        // Upload ID
+        await API.uploadDocument(newUserId, idFile, 'passport_id');
+        
+        // Upload Student Card if applicable
+        if (selectedRole === 'student' && studentFile) {
+          await API.uploadDocument(newUserId, studentFile, 'student_card');
+        }
+
+        // Upload Profile Picture
+        await API.uploadDocument(newUserId, avatarFile, 'profile_picture');
+
+        showToast('Documents uploaded successfully! Waiting for admin review.');
+        setTimeout(() => window.location.href = '/profile.html', 1500);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Upload & Complete';
+        showToast(err.error || 'Upload failed.', 'error');
+      }
+    }
+
+    loadFormData();
+  </script>
+</body>
+</html>
