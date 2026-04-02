@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content" style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 420px; height: 420px; top: -120px; right: -100px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.05; width: 320px; height: 320px; bottom: 100px; left: -100px;"></div>
+    
+    <div class="container" style="max-width:800px; position:relative; z-index:1;">
+      <div class="profile-header" id="profile-header">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+
+      <div id="verification-section"></div>
+
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header"><h3><span data-icon="user"></span> Personal Information</h3></div>
+        <div id="profile-details"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:24px;" id="groups-card">
+        <div class="card-header">
+          <h3><span data-icon="globe"></span> My Groups</h3>
+          <a href="/groups.html" class="btn btn-sm btn-secondary">Browse Groups</a>
+        </div>
+        <div id="profile-groups"></div>
+      </div>
+
+      <div class="card" id="earnings-card" style="display:none;">
+        <div class="card-header"><h3><span data-icon="money"></span> My Earnings</h3></div>
+        <div id="profile-earnings"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+      <h2>Edit Profile</h2>
+      <form id="edit-form" onsubmit="saveProfile(event)">
+        <div class="form-group" id="modal-upload-area" style="margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid var(--border-subtle);">
+          <label>Update Profile Picture</label>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+               <span data-icon="paperclip"></span> Choose File
+               <input type="file" accept="image/*" style="display:none;" onchange="uploadAvatar(this.files[0])">
+            </label>
+            <span style="font-size:0.75rem;color:var(--text-muted);">JPG or PNG, max 5MB. Photo will be reviewed by admin.</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="edit-name" readonly style="background: var(--bg-body); cursor: not-allowed;">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="edit-email" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="edit-phone">
+        </div>
+        <div class="form-group">
+          <label>Nationality</label>
+          <select id="edit-nationality"><option value="">Select country...</option></select>
+          <small class="text-muted" style="display:block;margin-top:4px;">Note: Changing nationality as a student requires re-verification.</small>
+        </div>
+        <div class="form-group">
+          <label>New Password (Optional)</label>
+          <input type="password" id="edit-password" placeholder="Leave blank to keep current">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    async function loadProfile() {
+      const user = await checkAuth();
+      if (!user) return window.location.href = '/login.html';
+      Sidebar.render(user, 'profile');
+
+      // Profile header (Badge removed as per request)
+      const avatarHtml = user.avatarUrl && user.avatarStatus === 'approved'
+        ? `<img src="${user.avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">`
+        : `<span>${user.fullName.charAt(0)}</span>`;
+      
+      const statusClass = user.avatarStatus === 'approved' ? 'verified' : user.avatarStatus === 'pending' ? 'pending' : 'unverified';
+
+      document.getElementById('profile-header').innerHTML = `
+        <div class="profile-avatar-container">
+          <div class="profile-avatar ${statusClass}">${avatarHtml}</div>
+        </div>
+        <div class="profile-info">
+          <h1>Welcome, ${user.fullName.split(' ')[0]}!</h1>
+          <p id="role-desc-full"></p>
+          <div style="margin-top:8px;">
+             <span class="badge badge-${statusClass}">${user.avatarStatus.charAt(0).toUpperCase() + user.avatarStatus.slice(1)} Photo</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="openEditModal()"><span data-icon="list"></span> Edit Profile</button>
+      `;
+
+      let roleMsg = '';
+      if (user.role === 'student') {
+        roleMsg = user.isGraduated ? '<span data-icon="shield"></span> Graduated Student' : `<span data-icon="logo"></span> Verified Student at ${user.universityName || 'University'}`;
+      } else if (user.role === 'representative') {
+        roleMsg = `<span data-icon="building"></span> Official Representative of ${user.universityName || 'University'}`;
+      } else if (user.role === 'applicant') {
+        roleMsg = '<span data-icon="applicant"></span> Applicant';
+      } else {
+        roleMsg = '<span data-icon="shield"></span> Administrator';
+      }
+      document.getElementById('role-desc-full').innerHTML = roleMsg;
+
+      // Merged Dashboard Stats
+      const verSection = document.getElementById('verification-section');
+      const dashData = await API.getDashboardStats().catch(() => ({}));
+      
+      let statsHtml = '';
+      if (user.role === 'representative') {
+        statsHtml = `
+          <div class="stat-cards">
+            <div class="stat-card"><div class="stat-icon"><span data-icon="chat"></span></div><div class="stat-value">${dashData.activeBookings || 0}</div><div class="stat-label">Active Conversations</div></div>
+            <div class="stat-card"><div class="stat-icon"><span data-icon="clock"></span></div><div class="stat-value">${dashData.openCalls || 0}</div><div class="stat-label">Pending Calls</div></div>
+            <div class="stat-card"><div class="stat-icon"><span data-icon="check"></span></div><div class="stat-value">${dashData.completedServices || 0}</div><div class="stat-label">Total Handled</div></div>
+          </div>
+        `;
+      } else if (user.role === 'student') {
+        const accepted = await API.getAcceptedServices().catch(() => ({bookings:[]}));
+        const totalEarnings = (accepted.bookings || []).filter(b => b.status === 'completed').reduce((sum, b) => sum + b.studentEarning, 0);
+        statsHtml = `
+          <div class="stat-cards">
+            <div class="stat-card"><div class="stat-icon"><span data-icon="matryoshka"></span></div><div class="stat-value">${totalEarnings} MP</div><div class="stat-label">Total Earned</div></div>
+            <div class="stat-card"><div class="stat-icon"><span data-icon="list"></span></div><div class="stat-value">${dashData.activeBookings || 0}</div><div class="stat-label">Active Services</div></div>
+            <div class="stat-card"><div class="stat-icon"><span data-icon="check"></span></div><div class="stat-value">${dashData.completedServices || 0}</div><div class="stat-label">Completed</div></div>
+          </div>
+        `;
+      } else if (user.role === 'applicant') {
+        statsHtml = `
+          <div class="stat-cards">
+            <div class="stat-card clickable" onclick="window.location.href='/groups.html'"><div class="stat-icon"><span data-icon="globe"></span></div><div class="stat-value">${user.groups?.length || 0}</div><div class="stat-label">My Groups</div></div>
+            <div class="stat-card"><div class="stat-icon"><span data-icon="clock"></span></div><div class="stat-value">${dashData.pendingRequests || 0}</div><div class="stat-label">Pending Requests</div></div>
+            <div class="stat-card clickable" onclick="window.location.href='/universities.html'"><div class="stat-icon"><span data-icon="building"></span></div><div class="stat-value">${dashData.uniCount || 0}</div><div class="stat-label">Universities</div></div>
+          </div>
+        `;
+      }
+      
+      verSection.innerHTML = statsHtml;
+
+      // Information display
+      const isStaffOrApp = user.role === 'admin' || user.role === 'representative' || user.role === 'applicant';
+      document.getElementById('profile-details').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-top:12px;">
+          <div><span style="font-size:0.82rem;color:var(--text-muted);">Email</span><br><strong>${user.email}</strong></div>
+          <div><span style="font-size:0.82rem;color:var(--text-muted);">Phone</span><br><strong>${user.phoneNumber || 'Not set'}</strong></div>
+          ${user.role !== 'admin' && user.role !== 'representative' ? `<div><span style="font-size:0.82rem;color:var(--text-muted);">Nationality</span><br><strong>${user.nationality || 'N/A'}</strong></div>` : ''}
+          ${user.universityName ? `<div><span style="font-size:0.82rem;color:var(--text-muted);">University</span><br><strong>${user.universityName}</strong></div>` : ''}
+          <div><span style="font-size:0.82rem;color:var(--text-muted);">Member Since</span><br><strong>${formatDate(user.createdAt).split(',')[0]}</strong></div>
+        </div>
+      `;
+
+      // Groups
+      const groupsCard = document.getElementById('groups-card');
+      const groupsEl = document.getElementById('profile-groups');
+      if (isStaffOrApp) {
+        groupsCard.style.display = 'none';
+      } else {
+        groupsCard.style.display = 'block';
+        try {
+          const userData = await API.getUser(user.id);
+          const groups = userData.user.groups || [];
+          if (groups.length === 0) {
+            groupsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:10px 0;">Join some groups to connect with others.</p>';
+          } else {
+            groupsEl.innerHTML = groups.map(g => `
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle);">
+                <span style="font-size:1.4rem;">${getIcon(g.flag || 'globe', 32)}</span>
+                <span style="font-weight:600;">${g.name}</span>
+              </div>
+            `).join('');
+          }
+        } catch { groupsEl.innerHTML = '<p>Unable to load groups.</p>'; }
+      }
+
+      // Activity Feed (Merged from Dashboard)
+      const activityEl = document.getElementById('profile-earnings'); 
+      document.getElementById('earnings-card').querySelector('h3').innerHTML = '<span data-icon="list"></span> Recent Activity';
+      document.getElementById('earnings-card').style.display = 'block';
+
+      try {
+        const bookings = await API.getMyBookings();
+        if (!bookings.bookings || bookings.bookings.length === 0) {
+          activityEl.innerHTML = '<p style="color:var(--text-muted);padding:10px 0;">No recent activity found.</p>';
+        } else {
+          activityEl.innerHTML = bookings.bookings.slice(0, 5).map(b => `
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-subtle);">
+              <div style="background:var(--bg-input); padding:8px; border-radius:8px; color:var(--accent-blue);">${getIcon(b.serviceIcon, 20)}</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:0.88rem;">${b.serviceName}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">${timeAgo(b.createdAt)}</div>
+              </div>
+              ${b.status === 'accepted' ? `<a href="/chats.html?chatId=${b.id}" class="btn btn-xs btn-secondary">Chat</a>` : ''}
+              ${statusBadge(b.status)}
+            </div>
+          `).join('');
+        }
+      } catch { activityEl.innerHTML = '<p>Unable to load activity.</p>'; }
+
+      // Final icon render
+      document.querySelectorAll('.page-content [data-icon]').forEach(el => {
+        const iconName = el.getAttribute('data-icon');
+        const size = el.getAttribute('data-size') || 18;
+        el.innerHTML = getIcon(iconName, size);
+      });
+    }
+
+    async function uploadAvatar(file) {
+      if (!file) return;
+      showToast('Uploading profile picture...', 'info');
+      try {
+        await API.uploadDocument(currentUser.id, file, 'profile_picture');
+        showToast('Photo uploaded! Waiting for admin verification.');
+        closeEditModal();
+        loadProfile();
+      } catch (e) {
+        showToast(e.error || 'Upload failed.', 'error');
+      }
+    }
+
+    async function openEditModal() {
+      const user = currentUser;
+      document.getElementById('edit-email').value = user.email;
+      document.getElementById('edit-phone').value = user.phoneNumber || '';
+      
+      const natGroup = document.getElementById('edit-nationality').closest('.form-group');
+      const isStaffOrApp = user.role === 'admin' || user.role === 'representative' || user.role === 'applicant';
+      if (isStaffOrApp && user.role !== 'applicant') {
+        natGroup.style.display = 'none';
+      } else {
+        natGroup.style.display = 'block';
+        const natSelect = document.getElementById('edit-nationality');
+        if (natSelect.options.length <= 1) {
+          try {
+            const res = await API.getCountries();
+            res.countries.forEach(c => {
+              const opt = document.createElement('option');
+              opt.value = c.name;
+              opt.textContent = `${c.name}`;
+              if (c.name === user.nationality) opt.selected = true;
+              natSelect.appendChild(opt);
+            });
+          } catch (e) {}
+        } else {
+          natSelect.value = user.nationality || '';
+        }
+      }
+
+      document.getElementById('edit-name').value = user.fullName;
+
+      // Re-render paperclip icon
+      const upArea = document.getElementById('modal-upload-area');
+      if (upArea) {
+        const iconSpan = upArea.querySelector('[data-icon]');
+        if (iconSpan) iconSpan.innerHTML = getIcon('paperclip', 14);
+      }
+      
+      document.getElementById('edit-modal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.remove('active');
+      document.getElementById('edit-password').value = '';
+    }
+
+    async function saveProfile(e) {
+      e.preventDefault();
+      try {
+        const payload = {
+          email: document.getElementById('edit-email').value,
+          phoneNumber: document.getElementById('edit-phone').value
+        };
+        const isStaffOrApp = currentUser.role === 'admin' || currentUser.role === 'representative' || currentUser.role === 'applicant';
+        if (!isStaffOrApp || currentUser.role === 'applicant') {
+          payload.nationality = document.getElementById('edit-nationality').value;
+        }
+
+        const pwd = document.getElementById('edit-password').value;
+        if (pwd) payload.password = pwd;
+
+        await API.updateUser(currentUser.id, payload);
+        showToast('Profile updated!');
+        closeEditModal();
+        loadProfile();
+      } catch (err) {
+        showToast(err.error || 'Failed to update profile.', 'error');
+      }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>
