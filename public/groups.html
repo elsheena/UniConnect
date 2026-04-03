@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Groups — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content" style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 450px; height: 450px; top: -120px; right: -100px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.06; width: 350px; height: 350px; bottom: 80px; left: -80px;"></div>
+    
+    <div class="container" style="position:relative; z-index:1;">
+      <!-- Groups List View -->
+      <div id="groups-list-view">
+        <div class="page-header">
+          <h1><span data-icon="globe"></span> Groups</h1>
+          <p>Verified communities for foreign students, organized by university and nationality.</p>
+        </div>
+        <div id="recommended-section" style="display:none; margin-bottom: 40px;">
+          <h2 style="margin-bottom: 16px;"><span data-icon="star"></span> Recommended for You</h2>
+          <div class="grid-3" id="recommended-grid"></div>
+        </div>
+        <h2 style="margin-bottom: 16px;">All Groups</h2>
+        <div class="grid-3" id="groups-grid">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- Group Detail View -->
+      <div id="group-detail-view" style="display:none;">
+        <div class="page-header">
+          <a href="#" onclick="showGroupsList();return false;" style="color:var(--accent-blue);font-size:0.88rem;">← Back to Groups</a>
+          <h1 id="group-title"></h1>
+          <p id="group-desc"></p>
+          <div style="margin-top:12px;" id="group-actions"></div>
+        </div>
+
+        <div class="group-detail-layout">
+          <div>
+            <div class="chat-container" id="chat-container">
+              <div class="chat-header" id="chat-header">Group Chat</div>
+              <div class="chat-messages" id="chat-messages">
+                <div class="empty-state"><div class="empty-icon"><span data-icon="chat"></span></div><h3>No messages yet</h3><p>Start the conversation!</p></div>
+              </div>
+              <div class="chat-input-area" id="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMsg()">
+                <button class="btn btn-primary btn-sm" onclick="sendMsg()">Send</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="members-sidebar">
+            <h3>Members</h3>
+            <div id="members-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join Reason Modal -->
+  <div class="modal-overlay" id="reason-modal">
+    <div class="modal">
+      <h2>Join Request</h2>
+      <p style="margin-bottom:16px;color:var(--text-secondary);font-size:0.9rem;">To join a group outside your nationality, an administrator must approve your request. Please explain why you want to join this group.</p>
+      <div class="form-group">
+        <label for="join-reason">Your Reason</label>
+        <textarea id="join-reason" rows="3" placeholder="I'm learning the language..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeReasonModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitJoinReason()">Send Request</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let activeGroupId = null;
+    let chatInterval = null;
+
+    async function loadGroups() {
+      const user = await checkAuth();
+      Sidebar.render(user, 'groups');
+      if (!user) return window.location.href = '/login.html';
+
+      try {
+        const data = await API.getGroups();
+        const grid = document.getElementById('groups-grid');
+        const recGrid = document.getElementById('recommended-grid');
+        const recSection = document.getElementById('recommended-section');
+        
+        if (!data.groups || data.groups.length === 0) {
+          grid.innerHTML = '<div class="empty-state"><p>No groups available.</p></div>';
+          return;
+        }
+
+        let recommended = [];
+        let others = [];
+
+        data.groups.forEach(g => {
+          let isRec = false;
+          // Recommend University group
+          if (g.isUniversityGroup && user.universityId === g.universityId) {
+            isRec = true;
+          }
+          // Recommend Nationality group
+          else if (g.isCountryGroup && user.nationality && g.name.includes(user.nationality)) {
+            isRec = true;
+          }
+
+          if (isRec) recommended.push(g);
+          else others.push(g);
+        });
+
+        // Ensure University group is at the top of recommended
+        recommended.sort((a, b) => {
+          if (a.isUniversityGroup && !b.isUniversityGroup) return -1;
+          if (!a.isUniversityGroup && b.isUniversityGroup) return 1;
+          return 0;
+        });
+
+        const renderGroup = g => `
+          <div class="group-card" onclick="openGroup(${g.id})">
+            <div class="group-flag">${getIcon(g.flag || 'globe', 40)}</div>
+            <h3>${g.name}</h3>
+            <p>${g.description}</p>
+            <div class="group-meta">
+              <span><span data-icon="users"></span> ${g.memberCount} members</span>
+            </div>
+          </div>
+        `;
+
+        if (recommended.length > 0) {
+          recSection.style.display = 'block';
+          recGrid.innerHTML = recommended.map(renderGroup).join('');
+        } else {
+          recSection.style.display = 'none';
+        }
+
+        grid.innerHTML = others.map(renderGroup).join('');
+      } catch (e) {
+        document.getElementById('groups-grid').innerHTML = '<div class="empty-state"><p>Failed to load groups.</p></div>';
+      }
+    }
+
+    function showGroupsList() {
+      document.getElementById('groups-list-view').style.display = 'block';
+      document.getElementById('group-detail-view').style.display = 'none';
+      activeGroupId = null;
+      if (chatInterval) clearInterval(chatInterval);
+    }
+
+    async function openGroup(groupId) {
+      activeGroupId = groupId;
+      document.getElementById('groups-list-view').style.display = 'none';
+      document.getElementById('group-detail-view').style.display = 'block';
+
+      try {
+        const data = await API.getGroup(groupId);
+        const group = data.group;
+        document.getElementById('group-title').innerHTML = `${getIcon(group.flag || 'globe', 24)} ${group.name}`;
+        document.getElementById('group-desc').textContent = group.description;
+        document.getElementById('chat-header').innerHTML = `<span data-icon="chat"></span> ${group.name} — Chat`;
+
+        // Actions
+        const actionsEl = document.getElementById('group-actions');
+        if (data.isMember || currentUser.role === 'admin') {
+          actionsEl.innerHTML = data.isMember ? 
+            `<span class="badge badge-green">✓ Member</span> <button class="btn btn-sm btn-danger" onclick="leaveGroup(${groupId})">Leave Group</button>` :
+            `<span class="badge badge-purple">Admin Read-Only</span>`;
+            
+          document.getElementById('chat-input-area').style.display = data.isMember ? 'flex' : 'none';
+          loadMessages(groupId);
+          chatInterval = setInterval(() => loadMessages(groupId), 5000);
+        } else {
+          actionsEl.innerHTML = `<button class="btn btn-primary btn-sm" onclick="joinGroup(${groupId})">Join Group</button>`;
+          document.getElementById('chat-input-area').style.display = 'none';
+          document.getElementById('chat-messages').innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="lock"></span></div><h3>Join to see messages</h3><p>You need to be an approved member to access the chat.</p></div>';
+        }
+
+        // Members
+        const membersList = document.getElementById('members-list');
+        if (data.members.length === 0) {
+          membersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">No members yet.</p>';
+        } else {
+          membersList.innerHTML = data.members.map(m => `
+            <div class="member-item">
+              <div class="member-avatar">${m.fullName.charAt(0)}</div>
+              <div class="member-info">
+                <div class="member-name">${m.fullName} ${m.isRepresentative ? '<span data-icon="star"></span>' : ''}</div>
+                <div class="member-uni">${m.universityName || ''}</div>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        showToast(e.error || 'Failed to load group.', 'error');
+        showGroupsList();
+      }
+    }
+
+    let pendingJoinGroupId = null;
+
+    async function joinGroup(groupId) {
+      try {
+        const res = await API.joinGroup(groupId);
+        showToast(res.message || 'You joined the group!');
+        openGroup(groupId);
+      } catch (e) {
+        if (e.requiresReason) {
+          pendingJoinGroupId = groupId;
+          document.getElementById('reason-modal').classList.add('active');
+        } else {
+          showToast(e.error || 'Failed to join group.', 'error');
+        }
+      }
+    }
+
+    function closeReasonModal() {
+      document.getElementById('reason-modal').classList.remove('active');
+      document.getElementById('join-reason').value = '';
+      pendingJoinGroupId = null;
+    }
+
+    async function submitJoinReason() {
+      if (!pendingJoinGroupId) return;
+      const reason = document.getElementById('join-reason').value.trim();
+      if (!reason) return showToast('Please enter a reason.', 'error');
+
+      try {
+        const res = await API.joinGroup(pendingJoinGroupId, { reason });
+        showToast(res.message || 'Request sent successfully!');
+        closeReasonModal();
+      } catch (e) {
+        showToast(e.error || 'Failed to send request.', 'error');
+      }
+    }
+
+    async function leaveGroup(groupId) {
+      try {
+        await API.leaveGroup(groupId);
+        showToast('You left the group.');
+        if (chatInterval) clearInterval(chatInterval);
+        openGroup(groupId);
+      } catch (e) {
+        showToast(e.error || 'Failed to leave group.', 'error');
+      }
+    }
+
+    async function loadMessages(groupId) {
+      try {
+        const data = await API.getMessages(groupId);
+        const container = document.getElementById('chat-messages');
+        if (!data.messages || data.messages.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="chat"></span></div><h3>No messages yet</h3><p>Start the conversation!</p></div>';
+          return;
+        }
+        container.innerHTML = data.messages.map(m => `
+          <div class="chat-msg ${m.senderId === currentUser.id ? 'own' : ''}">
+            ${m.senderId !== currentUser.id ? `<div class="msg-sender">${m.senderName}</div>` : ''}
+            <div>${m.text}</div>
+            <div class="msg-time">${timeAgo(m.sentAt)}</div>
+          </div>
+        `).join('');
+        container.scrollTop = container.scrollHeight;
+      } catch {}
+    }
+
+    async function sendMsg() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text || !activeGroupId) return;
+      input.value = '';
+      try {
+        await API.sendMessage(activeGroupId, text);
+        loadMessages(activeGroupId);
+      } catch (e) {
+        showToast(e.error || 'Failed to send message.', 'error');
+      }
+    }
+
+    loadGroups();
+  </script>
+</body>
+</html>

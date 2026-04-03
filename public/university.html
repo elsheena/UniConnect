@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>University — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .uni-hero {
+      position: relative;
+      background: var(--bg-card);
+      padding: 60px 0;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .uni-hero-img {
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 30px;
+    }
+    .uni-header {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .uni-logo-img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      background: white;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+    }
+    .uni-info-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 40px;
+    }
+    .service-selection {
+      background: var(--bg-card);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 100px;
+    }
+  </style>
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div class="container">
+      <div id="uni-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    async function initPage() {
+      const user = await checkAuth();
+      Sidebar.render(user, 'universities');
+      const urlParams = new URLSearchParams(window.location.search);
+      const uniId = urlParams.get('id');
+      if (!uniId) return window.location.href = '/universities.html';
+
+      try {
+        const data = await API.getUniversityById(uniId);
+        const uni = data.university;
+        const services = data.services;
+        const container = document.getElementById('uni-content');
+
+        // Note: Using generated placeholders for demo
+        const buildingImg = uni.image || '/img/universities/uni_building_default.png';
+        const logoImg = uni.logo || '/img/universities/uni_logo_default.png';
+
+        container.innerHTML = `
+          <div class="uni-hero">
+            <img src="${buildingImg}" alt="${uni.name}" class="uni-hero-img">
+            <div class="uni-header">
+              <img src="${logoImg}" alt="Logo" class="uni-logo-img">
+              <div>
+                <h1 style="margin:0;">${uni.name}</h1>
+                <p style="color:var(--text-secondary);font-size:1.1rem;"><span data-icon="map-pin"></span> ${uni.city}, Russia</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="uni-info-grid" style="margin-top:40px;">
+            <div>
+              <h2 style="margin-bottom:16px;">About the University</h2>
+              <p style="font-size:1.1rem; line-height:1.6; color:var(--text-main);">${uni.description}</p>
+              
+              <h2 style="margin-top:40px;margin-bottom:16px;">Available Services at this Campus</h2>
+              <div class="grid-2">
+                ${services.map(s => `
+                  <div class="service-card" style="padding:15px; display:flex; gap:12px; align-items:center; cursor:default;">
+                    <div class="service-emoji" style="flex-shrink:0;">${getIcon(s.icon, 24)}</div>
+                    <div>
+                      <h4 style="margin:0;">${s.name}</h4>
+                      <p style="font-size:0.8rem; margin:0; color:var(--text-secondary);">${s.price > 0 ? s.price + ' MP' : 'Free'}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="service-selection">
+              <h3 style="margin-bottom:20px;">Book a Service</h3>
+              <div class="form-group">
+                <label>Service Type</label>
+                <select id="booking-service">
+                  ${services.map(s => `<option value="${s.id}">${s.name} (${s.price > 0 ? s.price + ' MP' : 'Free'})</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Arrival Notes / Specific Request</label>
+                <textarea id="booking-notes" placeholder="Tell us more about what you need..."></textarea>
+              </div>
+              <button class="btn btn-primary btn-block" onclick="bookUniService(${uni.id})">Confirm Booking</button>
+              <p style="font-size:0.75rem; color:var(--text-muted); margin-top:12px; text-align:center;">Verified students from this university will be notified of your request.</p>
+            </div>
+          </div>
+        `;
+
+        // Re-render icons
+        document.querySelectorAll('[data-icon]').forEach(el => {
+          const iconName = el.getAttribute('data-icon');
+          const size = el.getAttribute('data-size') || 18;
+          el.innerHTML = getIcon(iconName, size);
+        });
+      } catch (e) {
+        showToast(e.error || 'Failed to load university details.', 'error');
+      }
+    }
+
+    async function bookUniService(uniId) {
+      const serviceId = document.getElementById('booking-service').value;
+      const notes = document.getElementById('booking-notes').value;
+      try {
+        await API.bookService({ serviceTypeId: serviceId, universityId: uniId, notes });
+        showToast('Booking successful! A student will contact you soon.');
+        window.location.href = '/dashboard.html';
+      } catch (e) {
+        showToast(e.error || 'Failed to book service.', 'error');
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
