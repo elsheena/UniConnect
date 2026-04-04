@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earn — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div class="container">
+      <div class="page-header">
+        <h1><span data-icon="matryoshka"></span> Earn Matryoshka Points</h1>
+        <p id="services-subtitle">Accept service requests from applicants and earn Matryoshka Points for real money exchange.</p>
+      </div>
+
+      <div class="tabs" id="service-tabs">
+        <button class="tab active" onclick="switchTab('offers')">Available Offers</button>
+        <button class="tab" onclick="switchTab('accepted')">My Accepted</button>
+      </div>
+
+      <div id="tab-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let currentTab = 'offers';
+
+    async function loadEarnPage() {
+      const user = await checkAuth();
+      if (!user) return window.location.href = '/login.html';
+      if (user.role !== 'student' || !user.isVerified) {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      Sidebar.render(user, 'earn');
+      switchTab('offers');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+      loadTabContent(tab);
+    }
+
+    async function loadTabContent(tab) {
+      const container = document.getElementById('tab-content');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      if (tab === 'offers') {
+        try {
+          const data = await API.getOffers();
+          if (!data.offers || data.offers.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="inbox"></span></div><h3>No open offers</h3><p>Check back later for new service requests from applicants.</p></div>';
+          } else {
+            container.innerHTML = data.offers.map(b => `
+              <div class="booking-item">
+                <span style="font-size:1.6rem;">${getIcon(b.serviceIcon, 24)}</span>
+                <div class="booking-info">
+                  <h4>${b.serviceName}</h4>
+                  <p>Requested by ${b.bookerName} • ${b.universityName || 'Any university'}${b.notes ? ' • "' + b.notes + '"' : ''}</p>
+                </div>
+                <div class="booking-actions">
+                  <span class="service-price-tag"><span class="amount"><span data-icon="matryoshka" data-size="14"></span> ${b.studentEarning} MP</span><span class="label">reward</span></span>
+                  <button class="btn btn-sm btn-success" onclick="acceptOffer(${b.id})">Accept</button>
+                </div>
+              </div>
+            `).join('');
+          }
+        } catch {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load offers.</p></div>';
+        }
+      } else if (tab === 'accepted') {
+        try {
+          const data = await API.getAcceptedServices();
+          if (!data.bookings || data.bookings.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="list"></span></div><h3>No accepted services</h3><p>Accept offers to start earning.</p></div>';
+          } else {
+            container.innerHTML = data.bookings.map(b => `
+              <div class="booking-item">
+                <span style="font-size:1.6rem;">${getIcon(b.serviceIcon, 24)}</span>
+                <div class="booking-info">
+                  <h4>${b.serviceName}</h4>
+                  <p>For: ${b.bookerName} • ${b.universityName || ''} • ${formatDate(b.acceptedAt || b.createdAt)}</p>
+                </div>
+                <div class="booking-actions">
+                  <span class="service-price-tag"><span class="amount"><span data-icon="matryoshka" data-size="14"></span> ${b.studentEarning} MP</span><span class="label">reward</span></span>
+                  ${statusBadge(b.status)}
+                  ${b.status === 'accepted' ? `<a href="/chats.html?bookingId=${b.id}" class="btn btn-sm btn-secondary">Chat</a>` : ''}
+                  ${b.status === 'accepted' ? `<button class="btn btn-sm btn-success" onclick="completeBooking(${b.id})">Complete</button>` : ''}
+                </div>
+              </div>
+            `).join('');
+          }
+        } catch {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load.</p></div>';
+        }
+      }
+
+      // Re-render icons for dynamic content
+      container.querySelectorAll('[data-icon]').forEach(el => {
+        const name = el.getAttribute('data-icon');
+        const size = el.getAttribute('data-size') || 16;
+        el.innerHTML = getIcon(name, size);
+      });
+    }
+
+    async function completeBooking(bookingId) {
+      try {
+        const result = await API.completeService(bookingId);
+        showToast(`Service completed! Earned: ${result.studentEarning} MP 🌟`);
+        loadTabContent(currentTab);
+      } catch (e) {
+        showToast(e.error || 'Failed to complete.', 'error');
+      }
+    }
+
+    async function acceptOffer(id) {
+      try {
+        const res = await API.acceptOffer(id);
+        showToast(res.message);
+        // Redirect to chat
+        if (res.chatId) {
+          window.location.href = `/chats.html?id=${res.chatId}`;
+        } else {
+          switchTab('accepted');
+        }
+      } catch (e) {
+        showToast(e.error || 'Failed to accept offer.', 'error');
+      }
+    }
+
+    loadEarnPage();
+  </script>
+</body>
+</html>

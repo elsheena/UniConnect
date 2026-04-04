@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Services — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content" style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 450px; height: 450px; top: -100px; right: -80px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.06; width: 350px; height: 350px; bottom: 80px; left: -80px;"></div>
+    
+    <div class="container" style="position:relative; z-index:1;">
+      <div class="page-header">
+        <h1><span data-icon="briefcase"></span> Services Marketplace</h1>
+        <p id="services-subtitle">Browse and book verified services, or accept offers to earn money.</p>
+      </div>
+
+      <div class="tabs" id="service-tabs">
+        <button class="tab active" onclick="switchTab('browse')">Browse Services</button>
+        <button class="tab" onclick="switchTab('bookings')">My Bookings</button>
+      </div>
+
+      <div id="tab-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Modal -->
+  <div class="modal-overlay" id="book-modal">
+    <div class="modal">
+      <h2 id="modal-service-name">Book Service</h2>
+      <div class="form-group">
+        <label for="modal-university">Target University</label>
+        <select id="modal-university"><option value="">Select university (optional)</option></select>
+      </div>
+      <div class="form-group">
+        <label for="modal-notes">Notes / Requirements</label>
+        <textarea id="modal-notes" rows="3" placeholder="Any special requirements..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmBooking()">Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    function getServiceIcon(id) {
+      if (id === 'airport_pickup') return 'airplane';
+      if (id === 'sim_card' || id === 'call_representative') return 'mail';
+      if (id === 'bank_sim') return 'creditcard';
+      return 'briefcase';
+    }
+    let currentTab = 'browse';
+    let bookingServiceId = null;
+
+    async function loadServicesPage() {
+      const user = await checkAuth();
+      Sidebar.render(user, 'services');
+      if (!user) return window.location.href = '/login.html';
+
+      // Load university list for modal
+      try {
+        const uData = await API.getUniversities();
+        const sel = document.getElementById('modal-university');
+        uData.universities.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${u.name} — ${u.city}`;
+          sel.appendChild(opt);
+        });
+      } catch {}
+
+      switchTab('browse');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+      loadTabContent(tab);
+    }
+
+    async function loadTabContent(tab) {
+      const container = document.getElementById('tab-content');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      if (tab === 'browse') {
+        try {
+          const data = await API.getServiceTypes();
+          container.innerHTML = `<div class="grid-3">${data.services.map(s => `
+            <div class="service-card">
+              <div class="service-emoji">${getIcon(s.icon, 32)}</div>
+              <h3>${s.name}</h3>
+              <p>${s.description}</p>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:auto;">
+                <div class="service-price-tag">
+                  <span class="amount">${s.price > 0 ? s.price + ' MP' : 'Free'}</span>
+                  ${s.firstFree ? '<span class="label">(1st free)</span>' : ''}
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openBookModal('${s.id}', '${s.name}')">Book</button>
+              </div>
+            </div>
+          `).join('')}</div>`;
+        } catch (e) {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load services.</p></div>';
+        }
+
+        // Re-render icons for dynamic content
+        document.querySelectorAll('#services-grid [data-icon]').forEach(el => {
+          const iconName = el.getAttribute('data-icon');
+          const size = el.getAttribute('data-size') || 20;
+          el.innerHTML = getIcon(iconName, size);
+        });
+      } else if (tab === 'bookings') {
+        try {
+          const data = await API.getMyBookings();
+          if (!data.bookings || data.bookings.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="list"></span></div><h3>No bookings yet</h3><p>Browse services and book one to get started.</p></div>';
+          } else {
+            container.innerHTML = data.bookings.map(b => `
+              <div class="booking-item">
+                <span style="font-size:1.6rem;">${getIcon(b.serviceIcon, 24)}</span>
+                <div class="booking-info">
+                  <h4>${b.serviceName}</h4>
+                  <p>${b.universityName || ''} • ${formatDate(b.createdAt)}${b.acceptedByName ? ' • Accepted by ' + b.acceptedByName : ''}</p>
+                </div>
+                <div class="booking-actions">
+                  <span class="service-price-tag"><span class="amount">${b.price} MP</span></span>
+                  ${statusBadge(b.status)}
+                  ${b.status === 'accepted' ? `<button class="btn btn-sm btn-success" onclick="completeBooking(${b.id})">Complete</button>` : ''}
+                  ${b.status === 'open' ? `<button class="btn btn-sm btn-danger" onclick="cancelBooking(${b.id})">Cancel</button>` : ''}
+                </div>
+              </div>
+            `).join('');
+          }
+        } catch {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load bookings.</p></div>';
+        }
+      }
+    }
+
+    function openBookModal(serviceId, serviceName) {
+      bookingServiceId = serviceId;
+      document.getElementById('modal-service-name').innerHTML = `<span data-icon="${getServiceIcon(serviceId)}"></span> Book: ${serviceName}`;
+      // Render modal icon
+      const iconEl = document.querySelector('#modal-service-name [data-icon]');
+      if (iconEl) iconEl.innerHTML = getIcon(getServiceIcon(serviceId), 24);
+      document.getElementById('book-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('book-modal').classList.remove('active');
+      bookingServiceId = null;
+    }
+
+    async function confirmBooking() {
+      if (!bookingServiceId) return;
+      try {
+        await API.bookService({
+          serviceTypeId: bookingServiceId,
+          universityId: document.getElementById('modal-university').value || undefined,
+          notes: document.getElementById('modal-notes').value
+        });
+        showToast('Service booked!');
+        closeModal();
+        switchTab('bookings');
+      } catch (e) {
+        showToast(e.error || 'Failed to book.', 'error');
+      }
+    }
+
+    async function acceptOffer(bookingId) {
+      try {
+        await API.acceptOffer(bookingId);
+        showToast('Offer accepted! <span data-icon="money"></span>');
+        switchTab('accepted');
+      } catch (e) {
+        showToast(e.error || 'Failed to accept.', 'error');
+      }
+    }
+
+    async function completeBooking(bookingId) {
+      try {
+        const result = await API.completeService(bookingId);
+        showToast(`Service completed! Earned: ${result.studentEarning}`);
+        loadTabContent(currentTab);
+      } catch (e) {
+        showToast(e.error || 'Failed to complete.', 'error');
+      }
+    }
+
+    async function cancelBooking(bookingId) {
+      try {
+        await API.cancelBooking(bookingId);
+        showToast('Booking cancelled.');
+        loadTabContent(currentTab);
+      } catch (e) {
+        showToast(e.error || 'Failed to cancel.', 'error');
+      }
+    }
+
+    loadServicesPage();
+  </script>
+</body>
+</html>

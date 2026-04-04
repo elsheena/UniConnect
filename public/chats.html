@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private Messages — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content" style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 400px; height: 400px; top: -80px; right: -50px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.05; width: 300px; height: 300px; bottom: 50px; left: -50px;"></div>
+    
+    <div class="container" style="position:relative; z-index:1;">
+      <div class="chat-layout">
+        <div class="chats-sidebar">
+          <div class="sidebar-header">
+            <h3>Messages</h3>
+          </div>
+          <div id="chats-list" class="chats-list">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <div class="chat-main">
+          <div id="chat-header-area" class="chat-header" style="display:none;">
+            <div class="chat-header-info">
+              <h4 id="chat-with-name">...</h4>
+              <p id="chat-service-info" style="font-size:0.75rem; color:var(--text-secondary);"></p>
+            </div>
+          </div>
+
+          <div id="chat-messages-area" class="chat-messages">
+            <div class="empty-state">
+              <div class="empty-icon"><span data-icon="chat"></span></div>
+              <h3>Select a chat</h3>
+              <p>Choose a conversation from the sidebar to start messaging.</p>
+            </div>
+          </div>
+
+          <div id="chat-input-area" class="chat-input-area" style="display:none;">
+            <input type="text" id="msg-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMsg()">
+            <button class="btn btn-primary btn-sm" onclick="sendMsg()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let activeChatId = null;
+    let chatInterval = null;
+
+    async function loadChats() {
+      const user = await checkAuth();
+      Sidebar.render(user, 'chats');
+      try {
+        const data = await API.getChats();
+        const list = document.getElementById('chats-list');
+        if (!data.chats || data.chats.length === 0) {
+          list.innerHTML = '<div class="empty-state" style="padding:20px;"><p style="font-size:0.85rem;">No messages yet.</p></div>';
+          return;
+        }
+        
+        list.innerHTML = data.chats.map(c => `
+          <div class="chat-item ${activeChatId == c.id ? 'active' : ''}" onclick="openChat(${c.id})">
+            <div class="chat-item-avatar">
+              ${c.otherUserAvatar 
+                ? `<img src="${c.otherUserAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+                : c.otherUserName.charAt(0)
+              }
+            </div>
+            <div class="chat-item-info">
+              <div class="chat-item-name">${c.otherUserName}</div>
+              <div class="chat-item-last">${c.serviceName}</div>
+            </div>
+          </div>
+        `).join('');
+
+        // If specific chat requested in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const reqChatId = urlParams.get('id');
+        const reqBookingId = urlParams.get('bookingId');
+        
+        if (reqChatId && !activeChatId) {
+          openChat(reqChatId);
+        } else if (reqBookingId && !activeChatId) {
+          const target = data.chats.find(c => c.bookingId == reqBookingId);
+          if (target) openChat(target.id);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function openChat(chatId) {
+      if (chatInterval) clearInterval(chatInterval);
+      activeChatId = chatId;
+      
+      // Update UI state
+      document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+      const activeEl = document.querySelector(`.chat-item[onclick="openChat(${chatId})"]`);
+      if (activeEl) activeEl.classList.add('active');
+
+      document.getElementById('chat-header-area').style.display = 'flex';
+      document.getElementById('chat-input-area').style.display = 'flex';
+
+      await refreshMessages();
+      chatInterval = setInterval(refreshMessages, 4000);
+    }
+
+    async function refreshMessages() {
+      if (!activeChatId) return;
+      try {
+        const data = await API.getChat(activeChatId);
+        document.getElementById('chat-with-name').textContent = data.otherUserName;
+        document.getElementById('chat-service-info').textContent = `Booking: ${data.serviceName}`;
+        
+        const container = document.getElementById('chat-messages-area');
+        if (!data.messages || data.messages.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No messages yet. Say hello!</p></div>';
+          return;
+        }
+
+        container.innerHTML = data.messages.map(m => {
+          const isOwn = m.senderId === currentUser.id;
+          const avatarUrl = isOwn ? data.currentUserAvatar : data.otherUserAvatar;
+          const avatarHtml = avatarUrl 
+            ? `<img src="${avatarUrl}" class="msg-avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+            : `<div class="msg-avatar-placeholder" style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${isOwn ? currentUser.fullName.charAt(0) : data.otherUserName.charAt(0)}</div>`;
+
+          return `
+            <div class="chat-msg ${isOwn ? 'own' : ''}">
+              <div style="display:flex; gap:8px; align-items:flex-end; ${isOwn ? 'flex-direction:row-reverse;' : ''}">
+                ${avatarHtml}
+                <div class="msg-bubble">
+                  <div class="msg-text">${m.text}</div>
+                  <div class="msg-time">${timeAgo(m.sentAt)}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function sendMsg() {
+      const input = document.getElementById('msg-input');
+      const text = input.value.trim();
+      if (!text || !activeChatId) return;
+      input.value = '';
+      try {
+        await API.sendPrivateMessage(activeChatId, text);
+        refreshMessages();
+      } catch (e) {
+        showToast('Failed to send message.', 'error');
+      }
+    }
+
+    loadChats();
+  </script>
+</body>
+</html>

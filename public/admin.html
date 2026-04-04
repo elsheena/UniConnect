@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content" style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 500px; height: 500px; top: -150px; right: -100px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.05; width: 400px; height: 400px; bottom: 50px; left: -100px;"></div>
+    
+    <div class="container" style="position:relative; z-index:1;">
+      <div class="page-header">
+        <h1><span data-icon="shield"></span> Admin Panel</h1>
+        <p>Manage users, verify documents, and monitor platform activity.</p>
+      </div>
+
+      <div class="stat-cards" id="admin-stats">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchAdminTab('docs')"><span data-icon="document"></span> Pending Documents</button>
+        <button class="tab" onclick="switchAdminTab('groups')"><span data-icon="globe"></span> Groups</button>
+        <button class="tab" onclick="switchAdminTab('users')"><span data-icon="users"></span> Users</button>
+        <button class="tab" onclick="switchAdminTab('chats')"><span data-icon="chat"></span> Moderation</button>
+      </div>
+
+      <div id="admin-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let adminTab = 'docs';
+
+    async function loadAdmin() {
+      const user = await checkAuth();
+      if (!user || user.role !== 'admin') {
+        showToast('Admin access required.', 'error');
+        return window.location.href = '/dashboard.html';
+      }
+      Sidebar.render(user, 'admin');
+
+      // Stats
+      try {
+        const s = await API.getStats();
+        document.getElementById('admin-stats').innerHTML = `
+          <div class="stat-card clickable" onclick="switchAdminTab('users')"><div class="stat-icon"><span data-icon="users"></span></div><div class="stat-value">${s.totalUsers}</div><div class="stat-label">Total Users</div></div>
+          <div class="stat-card clickable" onclick="switchAdminTab('users')"><div class="stat-icon"><span data-icon="check"></span></div><div class="stat-value">${s.verified}</div><div class="stat-label">Verified</div></div>
+          <div class="stat-card clickable" onclick="switchAdminTab('docs')"><div class="stat-icon"><span data-icon="document"></span></div><div class="stat-value">${s.pendingDocs}</div><div class="stat-label">Pending Docs</div></div>
+          <div class="stat-card"><div class="stat-icon"><span data-icon="list"></span></div><div class="stat-value">${s.totalBookings}</div><div class="stat-label">Total Bookings</div></div>
+        `;
+      } catch {}
+
+      switchAdminTab('docs');
+    }
+
+    function switchAdminTab(tab) {
+      adminTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[onclick="switchAdminTab('${tab}')"]`).classList.add('active');
+      loadAdminContent(tab);
+    }
+
+    async function loadAdminContent(tab) {
+      const container = document.getElementById('admin-content');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      if (tab === 'docs') {
+        try {
+          const data = await API.getPendingDocs();
+          if (!data.documents || data.documents.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="check"></span></div><h3>No pending documents</h3><p>All documents have been reviewed.</p></div>';
+          } else {
+            container.innerHTML = data.documents.map(d => `
+              <div class="doc-review-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <h4>${d.userName} <span class="badge badge-${d.userRole === 'student' ? 'blue' : 'purple'}">${d.userRole}</span></h4>
+                    <span class="badge badge-gray">${d.type.replace('_', ' ').toUpperCase()}</span>
+                </div>
+                <div class="doc-meta">
+                  <span data-icon="paperclip"></span> <strong>${d.type === 'passport_id' ? 'ID / Passport' : d.type === 'student_card' ? 'Student Card' : 'Profile Picture'}</strong> • <span data-icon="calendar"></span> ${formatDate(d.uploadedAt)}
+                </div>
+                <div style="margin:12px 0;">
+                  ${d.type === 'profile_picture' 
+                    ? `<img src="/uploads/${d.filename}" style="max-width:200px; max-height:200px; border-radius:12px; border:2px solid var(--border-subtle); display:block;">`
+                    : `<a href="/uploads/${d.filename}" target="_blank" class="btn btn-sm btn-secondary"><span data-icon="document"></span> View Document</a>`
+                  }
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                  <textarea id="note-${d.id}" placeholder="Review note / feedback..." style="height:60px;"></textarea>
+                </div>
+                ${d.userRole === 'student' && d.type !== 'profile_picture' ? `
+                <div class="form-group" style="margin-bottom:10px;">
+                  <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Graduation Date (Automatic Graduate status):</label>
+                  <input type="date" id="grad-date-${d.id}">
+                </div>
+                ` : ''}
+                <div class="doc-actions">
+                  <button class="btn btn-sm btn-success" onclick="verifyDoc(${d.id}, 'approve')"><span data-icon="check"></span> Approve</button>
+                  <button class="btn btn-sm btn-danger" onclick="verifyDoc(${d.id}, 'reject')"><span data-icon="x"></span> Reject</button>
+                </div>
+              </div>
+            `).join('');
+            
+            // Re-render icons for dynamic content
+            container.querySelectorAll('[data-icon]').forEach(el => {
+              const name = el.getAttribute('data-icon');
+              el.innerHTML = getIcon(name, 14);
+            });
+          }
+        } catch (e) {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load documents.</p></div>';
+        }
+      } else if (tab === 'groups') {
+        try {
+          const data = await API.getGroupRequests();
+          if (!data.requests || data.requests.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="globe"></span></div><h3>No pending group requests</h3><p>All group join requests have been resolved.</p></div>';
+          } else {
+            container.innerHTML = data.requests.map(r => `
+              <div class="doc-review-card">
+                <h4>Request by ${r.userName}</h4>
+                <div class="doc-meta">
+                  <span data-icon="globe"></span> Wants to join: <strong>${r.groupName}</strong> • <span data-icon="calendar"></span> ${formatDate(r.requestedAt)}
+                </div>
+                <div style="margin:12px 0; padding:12px; background:var(--bg-card); border-radius:6px; border:1px solid var(--border-subtle);">
+                  <strong style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted);">Reason provided:</strong>
+                  "${r.reason}"
+                </div>
+                <div class="doc-actions">
+                  <button class="btn btn-sm btn-success" onclick="verifyGroupReq(${r.id}, 'approve')"><span data-icon="check"></span> Approve</button>
+                  <button class="btn btn-sm btn-danger" onclick="verifyGroupReq(${r.id}, 'reject')"><span data-icon="x"></span> Reject</button>
+                </div>
+              </div>
+            `).join('');
+          }
+        } catch (e) {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load group requests.</p></div>';
+        }
+      } else if (tab === 'users') {
+        try {
+          const data = await API.getAllUsers();
+          container.innerHTML = `
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border-subtle);">
+                    <th style="text-align:left;padding:12px;font-size:0.82rem;color:var(--text-muted);">ID</th>
+                    <th style="text-align:left;padding:12px;font-size:0.82rem;color:var(--text-muted);">Name</th>
+                    <th style="text-align:left;padding:12px;font-size:0.82rem;color:var(--text-muted);">Email</th>
+                    <th style="text-align:left;padding:12px;font-size:0.82rem;color:var(--text-muted);">Role</th>
+                    <th style="text-align:left;padding:12px;font-size:0.82rem;color:var(--text-muted);">Verified</th>
+                    <th style="text-align:left;padding:12px;font-size:0.82rem;color:var(--text-muted);">University</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${data.users.map(u => `
+                    <tr style="border-bottom:1px solid var(--border-subtle);">
+                      <td style="padding:12px;font-size:0.88rem;">${u.id}</td>
+                      <td style="padding:12px;font-size:0.88rem;font-weight:600;">${u.fullName}</td>
+                      <td style="padding:12px;font-size:0.88rem;color:var(--text-secondary);">${u.email}</td>
+                      <td style="padding:12px;">${statusBadge(u.role)}</td>
+                      <td style="padding:12px;">${u.isVerified ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>'}</td>
+                      <td style="padding:12px;font-size:0.85rem;">${u.universityName || '—'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } catch {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load users.</p></div>';
+        }
+      } else if (tab === 'chats') {
+        try {
+          const response = await fetch('/api/admin/chats');
+          const data = await response.json();
+          if (!data.conversations || data.conversations.length === 0) {
+            container.innerHTML = '<div class="empty-state"><h3>No active chats</h3><p>There are no messages on the platform yet.</p></div>';
+          } else {
+            container.innerHTML = `
+              <div class="grid-2">
+                ${data.conversations.map(c => `
+                  <div class="card clickable" onclick="openChatModeration('${c.id}', '${c.user1.name} & ${c.user2.name}')">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                      <strong style="color:var(--accent-blue);">${c.user1.name}</strong>
+                      <span data-icon="chat" style="color:var(--text-muted);"></span>
+                      <strong style="color:var(--accent-purple);">${c.user2.name}</strong>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                      Last: ${c.lastMessage}
+                    </p>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">
+                      ${formatDate(c.timestamp)}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+            // Re-render icons
+            container.querySelectorAll('[data-icon]').forEach(el => {
+              const name = el.getAttribute('data-icon');
+              el.innerHTML = getIcon(name, 14);
+            });
+          }
+        } catch (e) {
+          container.innerHTML = '<div class="empty-state"><p>Failed to load chat conversations.</p></div>';
+        }
+      }
+    }
+
+    async function openChatModeration(chatId, title) {
+      const container = document.getElementById('admin-content');
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3>Monitoring: ${title}</h3>
+            <button class="btn btn-sm btn-secondary" onclick="switchAdminTab('chats')">Back to List</button>
+          </div>
+          <div id="chat-history-content" style="max-height: 500px; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.1); border-radius: 12px; margin-top: 20px;">
+             <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      `;
+      
+      try {
+        const response = await fetch(`/api/admin/chats/${chatId}`);
+        const data = await response.json();
+        const history = document.getElementById('chat-history-content');
+        
+        if (!data.messages || data.messages.length === 0) {
+          history.innerHTML = '<p>No messages found.</p>';
+        } else {
+          history.innerHTML = data.messages.map(m => {
+            const isFirst = m.senderId === data.messages[0].senderId;
+            return `
+              <div style="display:flex; flex-direction:column; align-items:${isFirst ? 'flex-start' : 'flex-end'}; margin-bottom:12px;">
+                <div style="max-width:85%; padding:10px 14px; border-radius:14px; background:${isFirst ? 'rgba(59,130,246,0.15)' : 'rgba(139,92,246,0.15)'}; border:1px solid ${isFirst ? 'rgba(59,130,246,0.2)' : 'rgba(139,92,246,0.2)'};">
+                   <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; margin-bottom:4px; color:${isFirst ? 'var(--accent-blue)' : 'var(--accent-purple)'};">
+                     ${isFirst ? 'Sender A' : 'Sender B'} (ID: ${m.senderId})
+                   </div>
+                   <div style="font-size:0.9rem;">${m.text}</div>
+                </div>
+                <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px;">${formatDate(m.timestamp)}</div>
+              </div>
+            `;
+          }).join('');
+          history.scrollTop = history.scrollHeight;
+        }
+      } catch (e) {
+        document.getElementById('chat-history-content').innerHTML = '<p>Error loading messages.</p>';
+      }
+    }
+
+    async function verifyDoc(id, action) {
+      const note = document.getElementById(`note-${id}`).value;
+      const gradDateEl = document.getElementById(`grad-date-${id}`);
+      const gradDate = gradDateEl ? gradDateEl.value : null;
+      try {
+        await API.verifyDocument(id, action, note, gradDate);
+        showToast(`Document ${action === 'approve' ? 'approved' : 'rejected'}!`);
+        loadAdmin();
+      } catch (e) {
+        showToast(e.error || 'Failed to verify.', 'error');
+      }
+    }
+
+    async function verifyGroupReq(reqId, action) {
+      if (!confirm(`Are you sure you want to ${action} this request?`)) return;
+      try {
+        await API.verifyGroupRequest(reqId, action);
+        showToast(`Request ${action === 'approve' ? 'approved' : 'rejected'}.`);
+        loadAdmin();
+      } catch (e) {
+        showToast(e.error || 'Failed to process request.', 'error');
+      }
+    }
+
+    loadAdmin();
+  </script>
+</body>
+</html>
