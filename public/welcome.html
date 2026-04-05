@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to UniConnect — Join the Student Community</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+  <div style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.15; width: 600px; height: 600px; top: -100px; right: -150px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.1; width: 500px; height: 500px; bottom: -100px; left: -150px;"></div>
+    
+    <section class="hero university-hero" style="position:relative; z-index:1;">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge"><span data-icon="check"></span> For Students, By Students</div>
+        <h1>Your Journey to <span class="gradient-text">Success</span><br>Starts Here</h1>
+        <p>UniConnect is the first verified ecosystem for international students in Russia. We help you before arrival, during studies, and beyond.</p>
+        <div class="hero-buttons">
+          <a href="/register.html" class="btn btn-primary">Start Your Application →</a>
+          <a href="/login.html" class="btn btn-secondary">Access My Account</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Discover Our Partner Universities</h2>
+        <p class="section-subtitle">We partner with top-tier Russian institutions to ensure you get the best educational experience.</p>
+      </div>
+      <div id="welcome-universities" class="grid-3">
+        <!-- Will be populated by JS -->
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <div style="text-align:center;margin-top:40px;">
+        <a href="/register.html" class="btn btn-secondary">Explore All Universities</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:var(--bg-card);">
+    <div class="container">
+      <div class="grid-2 align-center">
+        <div>
+          <h2 class="section-title">Verified & Secure</h2>
+          <p style="margin-bottom:20px;">Unlike generic social media, UniConnect requires verification. This ensures every student you talk to is real, and every service provider is accountable.</p>
+          <ul class="feature-list">
+            <li><span data-icon="check"></span> Strict Student Card Verification</li>
+            <li><span data-icon="check"></span> Encrypted 1-on-1 Chats</li>
+            <li><span data-icon="check"></span> University-Backed Support</li>
+          </ul>
+        </div>
+        <div style="text-align:right;">
+          <img src="/uni_building_1_1774609081475.png" alt="University Campus" style="width:100%;max-width:500px;border-radius:12px;box-shadow:var(--shadow-lg);">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">© 2026 UniConnect — Your Student Ecosystem</div>
+  </footer>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    async function initWelcome() {
+      // Redirect if logged in
+      const data = await API.me().catch(() => null);
+      const user = data ? data.user : null;
+      if (user) return window.location.href = '/dashboard.html';
+      Sidebar.render(null, 'home');
+
+      try {
+        const data = await API.getUniversities();
+        const container = document.getElementById('welcome-universities');
+        // Show first 3 unis
+        const sample = data.universities.slice(0, 3);
+        container.innerHTML = sample.map(u => `
+          <div class="service-card">
+            <div class="service-emoji"><span data-icon="building" data-size="32"></span></div>
+            <h3>${u.name}</h3>
+            <p style="font-size:0.88rem;color:var(--text-secondary);">${u.description.substring(0, 100)}...</p>
+            <div style="margin-top:16px;">
+              <a href="/register.html" style="color:var(--accent-blue);font-weight:600;font-size:0.9rem;">View Programs →</a>
+            </div>
+          </div>
+        `).join('');
+        
+        // Re-render icons
+        document.querySelectorAll('[data-icon]').forEach(el => {
+          const iconName = el.getAttribute('data-icon');
+          const size = el.getAttribute('data-size') || 20;
+          el.innerHTML = getIcon(iconName, size);
+        });
+      } catch (e) {}
+    }
+    initWelcome();
+  </script>
+</body>
+</html>
