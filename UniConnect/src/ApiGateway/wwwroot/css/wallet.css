@@ -1,0 +1,191 @@
+/* ===== WALLET & TRANSACTIONS STYLES ===== */
+
+.wallet-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.deposit-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.deposit-amount-display {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+.wallet-container {
+  max-width: 900px !important;
+  margin: 0 auto;
+}
+
+.wallet-action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.secure-label-margin {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+
+/* Balance Display Cards */
+.balance-val-green {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+.balance-val-purple {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent-purple);
+}
+
+.balance-subtext {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* Transaction List Rows */
+.tx-row-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tx-icon-box {
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.tx-info-box {
+  flex: 1;
+}
+
+.tx-desc {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.tx-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.tx-value-box {
+  text-align: right;
+}
+
+.tx-value-green {
+  font-weight: 600;
+  color: var(--accent-green);
+}
+
+.tx-value-red {
+  font-weight: 600;
+  color: var(--accent-red);
+}
+
+.tx-value-purple {
+  font-size: 0.8rem;
+  color: var(--accent-purple);
+}
+
+.tx-value-muted {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.no-transactions-label {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  padding: 10px 0;
+}
+
+/* Page Spacing Grid and Cards */
+.wallet-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .wallet-balance-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.wallet-balance-card {
+  text-align: center;
+}
+
+.wallet-action-card {
+  padding: 20px !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.wallet-action-card .btn {
+  margin-top: auto;
+}
+
+.wallet-action-card h4 {
+  margin-top: 0;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ===== DEPOSIT FORM CHECKBOX & SECURE LABEL STYLES (GREY & SMALLER) ===== */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 22px 0;
+}
+
+.checkbox-input {
+  cursor: pointer;
+  accent-color: var(--accent-blue);
+  width: 15px;
+  height: 15px;
+}
+
+.checkbox-label {
+  font-size: 0.78rem;
+  color: var(--text-muted) !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+.secure-label {
+  font-size: 0.7rem;
+  color: var(--text-muted) !important;
+  font-weight: 500;
+}
+
+.flex-center-gap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: var(--text-muted);
+}

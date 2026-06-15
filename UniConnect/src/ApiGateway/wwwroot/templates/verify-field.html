@@ -1,0 +1,8 @@
+<div class="form-group form-group-flex">
+  <span class="form-group-label-muted">{{displayName}}</span>
+  {{rejectionNoticeHtml}}
+  <label class="btn btn-secondary btn-full cursor-pointer" id="label-{{type}}" for="{{type}}-file">
+    <span id="icon-{{type}}">{{iconHtml}}</span> Choose {{displayName}}
+  </label>
+  <input type="file" id="{{type}}-file" class="hidden-input" data-type="{{type}}" accept="{{acceptTypes}}">
+</div>

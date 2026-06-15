@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earn — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div class="container">
+      <div class="page-header">
+        <h1><span data-icon="matryoshka"></span> Earn Matryoshka Points</h1>
+        <p id="services-subtitle">Accept service requests from applicants and earn Matryoshka Points for real money exchange.</p>
+      </div>
+
+      <div class="tabs" id="service-tabs">
+        <button class="tab active" onclick="switchTab('offers')">Available Offers</button>
+        <button class="tab" onclick="switchTab('accepted')">My Accepted</button>
+      </div>
+
+      <div id="tab-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/earn.js"></script>
+</body>
+</html>

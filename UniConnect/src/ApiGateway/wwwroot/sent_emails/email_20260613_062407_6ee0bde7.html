@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Simulated Email</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #0f172a; color: #cbd5e1; margin: 0; }
+        .email-container { max-width: 650px; margin: 30px auto; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); }
+        .header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 15px; margin-bottom: 20px; }
+        .header h3 { margin: 0 0 15px 0; color: #38bdf8; font-size: 1.3em; letter-spacing: 0.5px; text-transform: uppercase; }
+        .meta-row { margin: 8px 0; font-size: 0.95em; }
+        .label { font-weight: 600; color: #94a3b8; display: inline-block; width: 90px; }
+        .body-content { line-height: 1.7; white-space: pre-wrap; margin-bottom: 25px; color: #e2e8f0; font-size: 1.05em; background: rgba(15, 23, 42, 0.4); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .attachments { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px; }
+        .attachments h4 { margin: 0 0 10px 0; color: #38bdf8; font-size: 1em; }
+        .attachment-item { background: rgba(51, 65, 85, 0.5); padding: 10px 14px; margin: 6px 0; border-radius: 6px; font-size: 0.9em; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .attachment-name { color: #f1f5f9; font-weight: 500; }
+        .attachment-path { color: #64748b; font-size: 0.8em; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h3>[Simulated Email Dispatch]</h3>
+            <div class="meta-row"><span class="label">To:</span> applicant@test.com</div>
+            <div class="meta-row"><span class="label">Subject:</span> Notification: Account Verified!</div>
+            <div class="meta-row"><span class="label">Sent At:</span> 2026-06-13 06:24:07 UTC</div>
+        </div>
+        <div class="body-content">Hello Sample Applicant,
+
+You have a new notification on UniConnect:
+
+Congratulations! Your account has been verified and community groups unlocked.
+
+Link: http://localhost:3000/profile
+
+Regards,
+UniConnect Team</div>
+    </div>
+</body>
+</html>

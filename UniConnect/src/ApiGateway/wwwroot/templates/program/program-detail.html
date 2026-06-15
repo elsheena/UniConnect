@@ -1,0 +1,85 @@
+<div class="container container-large">
+  <!-- Header / Breadcrumbs -->
+  <div class="breadcrumb-row">
+    <a href="/universities" class="breadcrumb-link">Universities</a>
+    <span class="breadcrumb-separator">/</span>
+    <a href="/university?id={{uniId}}" class="breadcrumb-link">{{uniName}}</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">{{code}}</span>
+  </div>
+
+  <div class="program-hero-banner">
+    <div class="program-hero-overlay"></div>
+    <div class="program-hero-content">
+      <div class="program-code-label">{{code}}</div>
+      <h1 class="program-title">{{name}}</h1>
+      <p class="program-subtitle">{{uniName}} &bull; {{uniCity}}, Russia</p>
+    </div>
+  </div>
+  
+  <div class="program-detail-grid">
+    <div class="program-main-content">
+      <div class="card card-static" style="margin-bottom: 24px;">
+        <h2 class="heading-margin-bottom">About the Program</h2>
+        <p class="program-description-text">{{description}}</p>
+      </div>
+
+      <div class="card card-static" style="margin-bottom: 24px;">
+        <h2 class="heading-margin-md"><span data-icon="list"></span> Subjects You Will Study</h2>
+        <div id="subjects-container" class="grid-2-gap-sm">
+        </div>
+      </div>
+
+      <div class="card card-static">
+        <h2 class="heading-margin-md"><span data-icon="briefcase"></span> Career Prospects</h2>
+        <p class="description-secondary-margin">Graduates of this program are highly sought after in the following roles:</p>
+        <div id="careers-container" class="badge-container">
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card sticky-aside-card">
+        <div class="form-group heading-margin-md">
+          <label class="display-currency-label" style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-bottom:6px; font-weight:600;">Display Currency</label>
+          <select id="display-currency" class="select-full">
+            <option value="RUB">Russian Ruble (RUB)</option>
+            <option value="USD">US Dollar (USD)</option>
+            <option value="EUR">Euro (EUR)</option>
+            {{localCurrencyOption}}
+          </select>
+        </div>
+        
+        <div class="margin-bottom-lg text-center" style="margin-bottom:20px; text-align:center;">
+          <div class="label-small-muted heading-margin-xs" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Annual Tuition Fee</div>
+          <div id="program-cost-display" class="tuition-fee-display">
+            {{costRUBFormatted}}
+          </div>
+        </div>
+
+        <div class="program-meta-list">
+          <div class="program-meta-item">
+            <span data-icon="clock" data-size="16"></span> <strong>Duration:</strong> {{duration}}
+          </div>
+          <div class="program-meta-item">
+            <span data-icon="student" data-size="16"></span> <strong>Degree:</strong> {{level}}'s Degree
+          </div>
+          <div class="program-meta-item" style="color:{{langColor}}; font-weight:{{langFontWeight}};">
+            <span data-icon="globe" data-size="16"></span> <strong>Program Language:</strong> {{language}}
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full btn-apply-program" id="btn-apply-now" style="width:100%; padding:14px; margin-bottom:12px;">Apply Now</button>
+        
+        <div class="button-group-flex">
+           <button class="btn btn-secondary btn-full btn-sm" id="btn-call-rep">
+             <span data-icon="chat"></span> Call Representative
+           </button>
+           <button class="btn btn-secondary btn-full btn-sm" id="btn-student-consult">
+             <span data-icon="user"></span> Student Consultation
+           </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
