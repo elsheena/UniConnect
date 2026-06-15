@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Identity — UniConnect</title>
+  <meta name="description" content="Upload your verification documents to complete your UniConnect account setup.">
+  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/profile.css?v=4">
+</head>
+
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 420px; height: 420px; top: -120px; right: -100px;">
+    </div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.05; width: 320px; height: 320px; bottom: 100px; left: -100px;">
+    </div>
+
+    <div class="container container-small">
+      <div class="card card-padded auth-card wide">
+
+        <!-- Unverified notice banner -->
+        <div id="unverified-banner" class="unverified-banner">
+          <span id="banner-icon" class="flex-shrink-0"></span>
+          <div class="flex-1">
+            <strong class="unverified-banner-title">Account Not Verified</strong><br>
+            Upload your documents below to submit for admin review. You'll be notified once approved.
+          </div>
+          <span class="badge badge-gray flex-shrink-0">Pending</span>
+        </div>
+
+        <div class="empty-state empty-state-compact">
+          <div class="empty-icon"><span id="doc-icon"></span></div>
+          <h1 class="verify-title">Verify Your Identity</h1>
+          <p id="upload-subtitle" class="subtitle margin-bottom-0">
+            Please upload your ID or Passport and a Profile Picture.
+          </p>
+        </div>
+
+        <!-- Upload Form -->
+        <form id="upload-form" class="upload-form-container">
+          <div id="upload-fields-container">
+            <div class="loading">
+              <div class="spinner"></div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full hidden-initially" id="upload-submit-btn">
+            Upload &amp; Complete
+          </button>
+        </form>
+
+        <div class="text-center-margin-top">
+          <a href="/profile.html" class="skip-link">Skip for now — go to my profile</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/verify.js?v=4"></script>
+</body>
+
+</html>

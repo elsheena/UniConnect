@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private Messages — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/chats.css">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content overflow-hidden-relative">
+    <div class="hero-orb hero-orb-1 chats-hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2 chats-hero-orb-2"></div>
+    
+    <div class="container relative-z-index-1">
+      <div class="chat-layout">
+        <!-- LEFT: Conversation list -->
+        <div class="chats-sidebar">
+          <div class="sidebar-header">
+            <h3>Messages</h3>
+          </div>
+          <div id="chats-list" class="chats-list">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- CENTER: Chat messages area -->
+        <div class="chat-main">
+          <div id="chat-header-area" class="chat-header" style="display:none;">
+            <div class="chat-header-info">
+              <h4 id="chat-with-name">...</h4>
+              <p id="chat-service-info" style="font-size:0.75rem; color:var(--text-secondary);"></p>
+            </div>
+          </div>
+
+          <div id="chat-messages-area" class="chat-messages">
+            <div class="empty-state">
+              <div class="empty-icon"><span data-icon="chat"></span></div>
+              <h3>Select a chat</h3>
+              <p>Choose a conversation from the list to start messaging.</p>
+            </div>
+          </div>
+
+          <div id="chat-input-area" class="chat-input-area">
+            <input type="text" id="msg-input" placeholder="Type your message...">
+            <button class="btn btn-primary btn-sm" id="btn-send-message">Send</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Conversation details -->
+        <div class="chat-details-panel" id="chat-details-panel">
+          <div class="sidebar-header">
+            <h3>Details</h3>
+          </div>
+          <div id="details-content" class="details-content">
+            <div class="empty-state" style="padding: 20px 0;">
+              <p style="font-size: 0.88rem; color: var(--text-muted);">Select a chat to see details.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/chats.js"></script>
+</body>
+</html>
+
+

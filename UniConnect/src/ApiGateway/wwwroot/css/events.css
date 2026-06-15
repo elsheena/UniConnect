@@ -1,0 +1,57 @@
+/* ===== EVENTS HUB & CARDS STYLES ===== */
+
+.event-card {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.event-card-image {
+  height: 180px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.event-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.event-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.event-card-meta-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.event-card h3 {
+  margin-bottom: 8px;
+}
+.event-card p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+.event-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+.event-card-location {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.events-hero-orb-1 {
+  opacity: 0.1 !important;
+}
+.events-hero-orb-2 {
+  opacity: 0.05 !important;
+}
+

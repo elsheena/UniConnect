@@ -1,0 +1,12 @@
+<div class="service-card">
+  <div class="service-emoji">{{iconHtml}}</div>
+  <h3>{{name}}</h3>
+  <p>{{description}}</p>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:auto;">
+    <div class="service-price-tag">
+      <span class="amount">{{priceText}}</span>
+      {{firstFreeBadge}}
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openBookModal('{{id}}', '{{name}}')">Book</button>
+  </div>
+</div>

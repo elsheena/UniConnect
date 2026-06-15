@@ -1,0 +1,28 @@
+<div class="card-static" style="padding:0; margin-bottom:20px; display:flex; flex-direction:column; overflow:hidden; border-radius:18px;">
+  <div style="display:flex; border-bottom:1px solid var(--border-subtle);">
+    <div style="background:var(--bg-input); padding:24px; width:180px; display:flex; flex-direction:column; justify-content:center; border-right:1px solid var(--border-subtle); flex-shrink:0;">
+      <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Annual Cost</div>
+      <div style="font-size:1.3rem; font-weight:800; color:var(--accent-green);" class="program-cost" data-rub="{{costRUB}}">
+        {{costRUBFormatted}}
+      </div>
+    </div>
+    <div style="padding:24px; flex:1; display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+          <div style="font-family:monospace; color:var(--accent-blue); font-weight:700; font-size:1.1rem;">{{code}}</div>
+          <div style="font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:6px; background:{{langBackground}}; color:{{langColor}}; border:1px solid var(--border-subtle); display:flex; align-items:center; gap:5px;">
+            {{langIconHtml}} {{languageText}}
+          </div>
+        </div>
+        <h3 style="margin:4px 0 8px 0; font-size:1.2rem;">{{name}}</h3>
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <span style="font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; gap:4px;"><span data-icon="clock" data-size="14"></span> {{duration}}</span>
+          <span style="font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; gap:4px;"><span data-icon="student" data-size="14"></span> {{level}}'s Degree</span>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="window.location.href='/program?uniId={{uniId}}&code={{code}}'">
+        Program Details
+      </button>
+    </div>
+  </div>
+</div>
