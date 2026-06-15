@@ -1,0 +1,31 @@
+# Spin up UniConnect Microservices concurrently in separate windows
+Write-Host "Spinning up UniConnect Microservice Ecosystem..." -ForegroundColor Green
+
+Write-Host "Starting Auth.API (Port 3001)..."
+Start-Process dotnet -ArgumentList "run --project src/Subsystems/Auth/Auth.API"
+
+Write-Host "Starting Chats.API (Port 3002)..."
+Start-Process dotnet -ArgumentList "run --project src/Subsystems/Chats/Chats.API"
+
+Write-Host "Starting Files.API (Port 3003)..."
+Start-Process dotnet -ArgumentList "run --project src/Subsystems/Files/Files.API"
+
+Write-Host "Starting Services.API (Port 3004)..."
+Start-Process dotnet -ArgumentList "run --project src/Subsystems/Services/Services.API"
+
+Write-Host "Starting Admin.API (Port 3005)..."
+Start-Process dotnet -ArgumentList "run --project src/Subsystems/Admin/Admin.API"
+
+Write-Host "Starting NotificationWorker..."
+Start-Process dotnet -ArgumentList "run --project src/NotificationWorker"
+
+# Wait a few seconds for downstream services to initialize
+Start-Sleep -Seconds 4
+
+Write-Host "Starting ApiGateway (Port 3000)..."
+Start-Process dotnet -ArgumentList "run --project src/ApiGateway"
+
+Write-Host "--------------------------------------------------------" -ForegroundColor Green
+Write-Host "All UniConnect microservices have been launched." -ForegroundColor Green
+Write-Host "The platform can be accessed at: http://localhost:3000" -ForegroundColor Cyan
+Write-Host "--------------------------------------------------------" -ForegroundColor Green
