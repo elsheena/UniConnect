@@ -1,0 +1,45 @@
+/* ===== SERVICES & BOOKINGS STYLES ===== */
+
+.service-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  transition: 0.3s;
+}
+.service-card:hover {
+  border-color: var(--border-active);
+  transform: translateY(-4px);
+}
+.service-emoji { font-size: 2.2rem; margin-bottom: 14px; }
+.service-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+.service-card p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+.service-price-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 6px 14px;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.15);
+  border-radius: var(--radius-sm);
+}
+.service-price-tag .amount {
+  font-family: 'Outfit'; font-size: 1.3rem; font-weight: 700; color: var(--accent-green);
+}
+.service-price-tag .label { font-size: 0.78rem; color: var(--text-muted); }
+
+.booking-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.booking-info { flex: 1; }
+.booking-info h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+.booking-info p { font-size: 0.82rem; color: var(--text-muted); }
+.booking-actions { display: flex; gap: 8px; align-items: center; }

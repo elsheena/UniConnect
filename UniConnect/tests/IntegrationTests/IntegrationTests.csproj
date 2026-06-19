@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Shared\Shared.Core\Shared.Core.csproj" />
+    <ProjectReference Include="..\..\src\Shared\Shared.DataAccess\Shared.DataAccess.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Admin\Admin.Core\Admin.Core.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Admin\Admin.DataAccess\Admin.DataAccess.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Admin\Admin.BLL\Admin.BLL.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Services\Services.Core\Services.Core.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Services\Services.DataAccess\Services.DataAccess.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Services\Services.BLL\Services.BLL.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

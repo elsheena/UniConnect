@@ -1,0 +1,18 @@
+<div class="doc-review-card" data-doc-id="{{id}}">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <h4><a href="/user-details.html?id={{userId}}" style="color:var(--text-primary); text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--accent-blue)'" onmouseout="this.style.color='var(--text-primary)'">{{userFullName}}</a> <span class="badge badge-{{userRoleClass}}">{{userRole}}</span></h4>
+      <span class="badge badge-gray">{{typeUpper}}</span>
+  </div>
+  <div class="doc-meta">
+    <span data-icon="paperclip"></span> <strong>{{typeDisplayName}}</strong> • <span data-icon="calendar"></span> {{uploadedAtFormatted}}
+  </div>
+  <div style="margin:12px 0;">
+    {{mediaContent}}
+  </div>
+  {{gradDateInput}}
+  <div class="doc-actions">
+    <button class="btn btn-sm btn-success" onclick="verifyDocApprove({{id}})"><span data-icon="check"></span> Approve</button>
+    <button class="btn btn-sm btn-danger" onclick="openRejectModal({{id}})"><span data-icon="x"></span> Reject</button>
+    {{showIdButton}}
+  </div>
+</div>

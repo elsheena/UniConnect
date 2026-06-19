@@ -1,0 +1,14 @@
+<div class="doc-review-card" data-request-id="{{id}}">
+  <h4>Request by <a href="/user-details.html?id={{userId}}" style="color:var(--text-primary); text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--accent-blue)'" onmouseout="this.style.color='var(--text-primary)'">{{userName}}</a></h4>
+  <div class="doc-meta">
+    <span data-icon="globe"></span> Wants to join: <strong>{{groupName}}</strong> • <span data-icon="calendar"></span> {{requestedAtFormatted}}
+  </div>
+  <div style="margin:12px 0; padding:12px; background:var(--bg-card); border-radius:6px; border:1px solid var(--border-subtle);">
+    <strong style="display:block;margin-bottom:4px;font-size:0.85rem;color:var(--text-muted);">Reason provided:</strong>
+    "{{reason}}"
+  </div>
+  <div class="doc-actions">
+    <button class="btn btn-sm btn-success" onclick="verifyGroupReq({{id}}, 'approve')"><span data-icon="check"></span> Approve</button>
+    <button class="btn btn-sm btn-danger" onclick="verifyGroupReq({{id}}, 'reject')"><span data-icon="x"></span> Reject</button>
+  </div>
+</div>

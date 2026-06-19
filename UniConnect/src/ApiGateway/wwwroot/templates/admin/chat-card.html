@@ -1,0 +1,12 @@
+<div class="card clickable" onclick="openChatModeration('{{id}}', '{{title}}')">
+  <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+    <strong style="color:var(--accent-blue); font-size:0.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;">{{title}}</strong>
+    <span class="badge {{badgeClass}}" style="font-size:0.7rem;">{{type}}</span>
+  </div>
+  <p style="font-size:0.85rem; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:6px;">
+    Last: {{lastMessage}}
+  </p>
+  <div style="font-size:0.75rem; color:var(--text-muted);">
+    {{timestampFormatted}}
+  </div>
+</div>
