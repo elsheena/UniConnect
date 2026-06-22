@@ -1,0 +1,41 @@
+<div class="uni-info-grid" style="margin-top:40px;">
+  <div class="card-static">
+    <h2 style="margin-bottom:16px;">About the University</h2>
+    <p style="font-size:1.0rem; line-height:1.6; color:var(--text-secondary); margin-bottom: 20px;">{{description}}</p>
+    
+    <div class="university-additional-meta" style="margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+      <div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Founded Year</span>
+        <span style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">{{foundedYear}}</span>
+      </div>
+      <div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">National Rating</span>
+        <span style="font-weight: 700; color: var(--accent-orange); font-size: 1.05rem;">★ {{rating}}</span>
+      </div>
+      <div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Global Ranking</span>
+        <span style="font-weight: 700; color: var(--accent-blue); font-size: 1.05rem;">#{{globalRank}}</span>
+      </div>
+      <div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Campus Type</span>
+        <span style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">{{campusType}}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="service-selection">
+    <h3 style="margin-bottom:20px;">Book a Campus Service</h3>
+    <div class="form-group">
+      <label>Service Type</label>
+      <select id="booking-service">
+        {{serviceOptions}}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Arrival Notes / Specific Request</label>
+      <textarea id="booking-notes" placeholder="Tell us more about what you need..."></textarea>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="bookUniService('{{uniId}}')">Confirm Booking</button>
+    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:12px; text-align:center;">Verified students from this university will be notified of your request.</p>
+  </div>
+</div>

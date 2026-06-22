@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/profile.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content profile-page-content">
+    <div class="hero-orb hero-orb-1 verify-orb-style-1"></div>
+    <div class="hero-orb hero-orb-2 verify-orb-style-2"></div>
+    
+    <div class="container profile-container">
+      <div class="profile-header" id="profile-header">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+
+      <div id="verification-section"></div>
+
+      <!-- Unverified notice (shown if not verified) -->
+      <div id="unverified-banner" class="unverified-banner" style="display:none;">
+        <span id="profile-shield-icon" class="unverified-notice-shield"></span>
+        <div class="unverified-notice-body">
+          <strong class="unverified-notice-title">Account Not Verified</strong><br>
+          Your account is pending verification. Please upload your documents.
+        </div>
+        <a href="/verify.html" class="btn btn-sm btn-secondary unverified-notice-upload">Upload Documents</a>
+      </div>
+
+      <div class="card profile-card">
+        <div class="card-header"><h3><span data-icon="user"></span> Personal Information</h3></div>
+        <div id="profile-details"></div>
+      </div>
+
+      <div class="card profile-card" id="groups-card">
+        <div class="card-header">
+          <h3><span data-icon="globe"></span> My Groups</h3>
+          <a href="/groups.html" class="btn btn-sm btn-secondary">Browse Groups</a>
+        </div>
+        <div id="profile-groups"></div>
+      </div>
+
+      <div class="card" id="earnings-card" style="display:none;">
+        <div class="card-header"><h3><span data-icon="money"></span> My Earnings</h3></div>
+        <div id="profile-earnings"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+      <h2>Edit Profile</h2>
+      <form id="edit-form">
+        <div class="form-group modal-upload-area" id="modal-upload-area">
+          <label>Update Profile Picture</label>
+          <div class="flex-align-center-gap-12">
+            <label class="btn btn-secondary btn-sm btn-cursor-pointer">
+               <span data-icon="paperclip"></span> Choose File
+               <input type="file" id="edit-avatar-input" accept="image/*" class="student-card-file-input">
+            </label>
+            <span class="detail-label">JPG or PNG, max 5MB. Photo will be reviewed by admin.</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="edit-name" readonly class="read-only-input">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="edit-email" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="edit-phone">
+        </div>
+        <div class="form-group">
+          <label>Nationality</label>
+          <select id="edit-nationality"><option value="">Select country...</option></select>
+          <small class="text-muted small-muted-block">Note: Changing nationality as a student requires re-verification.</small>
+        </div>
+        <div class="form-group">
+          <label>New Password (Optional)</label>
+          <input type="password" id="edit-password" placeholder="Leave blank to keep current">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="edit-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Become Student / Change University Modal -->
+  <div class="modal-overlay" id="student-modal">
+    <div class="modal">
+      <h2 id="student-modal-title">Become a Verified Student</h2>
+      <p class="student-modal-subtitle" id="student-modal-subtitle">
+        Please select the university you are enrolled in and upload your student card.
+      </p>
+      <form id="student-form">
+        <div class="form-group">
+          <label>Select University <span class="required-asterisk">*</span></label>
+          <select id="student-university" required class="student-university-select">
+            <option value="">Choose university...</option>
+          </select>
+        </div>
+        <div class="form-group student-upload-area">
+          <label>Upload Student Card <span class="required-asterisk">*</span></label>
+          <div class="flex-align-center-gap-12">
+            <label class="btn btn-secondary btn-sm student-card-file-label">
+               <span data-icon="paperclip"></span> <span id="student-card-label-text">Choose File</span>
+               <input type="file" id="student-card-file" accept=".jpg,.jpeg,.png,.pdf" required class="student-card-file-input">
+            </label>
+            <span class="detail-label">JPG, PNG, or PDF, max 5MB.</span>
+          </div>
+        </div>
+        <div class="modal-actions modal-actions-mt-20">
+          <button type="button" class="btn btn-secondary" id="student-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="student-submit-btn">Submit Verification</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/profile.js?v=4"></script>
+</body>
+</html>

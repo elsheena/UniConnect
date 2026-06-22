@@ -1,0 +1,118 @@
+<div class="profile-header">
+  <img id="user-profile-avatar" class="profile-avatar" src="/img/avatar_default.png">
+  <div style="flex:1;">
+     <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+       <h1 style="margin:0;" id="user-full-name"></h1>
+       <span id="user-verified-badge" style="display:none; color:var(--accent-blue);" class="verify-badge-icon"><span data-icon="verify"></span></span>
+       <span id="user-graduated-badge" class="badge badge-green" style="display:none; align-items:center; gap:4px;"><span data-icon="award"></span> Graduated</span>
+       <span id="user-banned-badge" class="badge badge-red" style="display:none;">BANNED</span>
+       <span id="user-muted-badge" class="badge badge-yellow" style="display:none;">MUTED</span>
+     </div>
+     <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+       <span class="badge badge-blue" id="user-role-badge"></span>
+       <span class="badge badge-gray" id="user-nationality-badge" style="display:none;"></span>
+       <span class="badge badge-purple" id="user-university-badge" style="display:none;"></span>
+     </div>
+     
+     <div id="message-button-container"></div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+   <div class="info-card">
+     <h3 style="margin-bottom:20px;">User Information</h3>
+     <div style="display:flex; flex-direction:column; gap:16px;">
+       <div>
+         <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Email</label>
+         <span id="user-email-text"></span>
+       </div>
+       <div>
+         <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Status</label>
+         <span id="user-status-text"></span>
+       </div>
+       <div id="user-graduation-container" style="display:none;">
+         <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Graduation Date</label>
+         <span id="user-graduation-text"></span>
+       </div>
+       <div>
+         <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Member Since</label>
+         <span id="user-membersince-text"></span>
+       </div>
+     </div>
+   </div>
+
+   <div class="info-card">
+     <h3 style="margin-bottom:20px;">Platform Stats</h3>
+     <div style="display:grid; grid-template-columns: 1fr; gap:20px;">
+       <div style="background:var(--bg-input); padding:20px; border-radius:16px; text-align:center;">
+         <div style="font-size:1.5rem; font-weight:800; color:var(--accent-purple);" id="user-balance-mp-text">0</div>
+         <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">MP Points</div>
+       </div>
+     </div>
+   </div>
+</div>
+
+<div id="admin-actions-menu-container" style="display:none; margin-top:30px;">
+  <div class="admin-menu">
+    <h3 style="margin-bottom:20px; color:var(--accent-red); display:flex; align-items:center; gap:10px;">
+      <span data-icon="shield"></span> Moderation Actions
+    </h3>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 20px;">
+      <button class="btn btn-secondary" id="admin-btn-mute">Mute User</button>
+      <button class="btn btn-secondary" id="admin-btn-ban">Ban User</button>
+      <button class="btn btn-secondary" id="admin-btn-role">Make Moderator</button>
+    </div>
+
+    <div id="admin-deduct-mp-container" style="border-top:1px solid var(--border-subtle); padding-top:20px; margin-top:20px;">
+      <h4 style="margin-bottom:12px; color:var(--text-primary); font-size: 0.9rem;">Deduct MP Points (Bad Behaviour)</h4>
+      <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="form-group" style="flex:1; min-width:120px; margin-bottom:0;">
+          <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Amount to Deduct</label>
+          <input type="number" id="deduct-mp-amount" placeholder="e.g. 100" min="1" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
+        </div>
+        <div class="form-group" style="flex:2; min-width:200px; margin-bottom:0;">
+          <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Reason for Deduction</label>
+          <input type="text" id="deduct-mp-reason" placeholder="e.g. Spammed chat, inappropriate behavior" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
+        </div>
+        <button class="btn btn-secondary" style="background:var(--accent-red); border-color:var(--accent-red); color:white; height:40px;" id="admin-btn-deduct-mp">Deduct Points</button>
+      </div>
+    </div>
+
+    <div id="admin-add-mp-container" style="border-top:1px solid var(--border-subtle); padding-top:20px; margin-top:20px;">
+      <h4 style="margin-bottom:12px; color:var(--text-primary); font-size: 0.9rem;">Add MP Points (Reward)</h4>
+      <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="form-group" style="flex:1; min-width:120px; margin-bottom:0;">
+          <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Amount to Add</label>
+          <input type="number" id="add-mp-amount" placeholder="e.g. 100" min="1" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
+        </div>
+        <div class="form-group" style="flex:2; min-width:200px; margin-bottom:0;">
+          <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Reason for Addition</label>
+          <input type="text" id="add-mp-reason" placeholder="e.g. Active participation, helping others" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
+        </div>
+        <button class="btn btn-primary" style="background:var(--accent-green); border-color:var(--accent-green); color:white; height:40px;" id="admin-btn-add-mp">Add Points</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="admin-documents-container" style="display:none; margin-top:30px;">
+  <div class="info-card">
+    <h3 style="margin-bottom:15px; color:var(--text-primary); display:flex; align-items:center; gap:10px;">
+      <span data-icon="document"></span> Uploaded Documents (Admin View)
+    </h3>
+    <div style="display:flex; flex-direction:column; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; background:var(--bg-body);" id="admin-documents-list">
+    </div>
+  </div>
+</div>
+
+<!-- Custom Action Confirmation Modal -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h2 id="confirm-modal-title">Are you sure?</h2>
+    <p id="confirm-modal-text">Are you sure you want to perform this action?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-confirm-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-confirm-submit">Confirm</button>
+    </div>
+  </div>
+</div>

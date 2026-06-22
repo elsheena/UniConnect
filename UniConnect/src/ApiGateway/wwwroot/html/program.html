@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Program Details — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/program.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content overflow-hidden-relative">
+    <div id="program-container">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- Verification Modal -->
+  <div class="modal-overlay" id="verify-prompt-modal">
+    <div class="modal">
+      <h2>Account Verification Required</h2>
+      <p class="heading-margin-bottom" style="color: var(--text-secondary); line-height: 1.5;">You need to verify your account first before applying to any university programs.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-verify-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-verify-confirm">Verify Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/program.js?v=4"></script>
+</body>
+</html>
