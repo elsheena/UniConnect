@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using Services.Core.DTOs;
+using Bookings.Core.DTOs;
 
-namespace Services.Core.Interfaces
+namespace Bookings.Core.Interfaces
 {
     public interface IUniversityService
     {

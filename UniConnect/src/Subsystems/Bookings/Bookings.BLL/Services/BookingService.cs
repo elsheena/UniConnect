@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Services.Core.DTOs;
-using Services.Core.Interfaces;
-using Services.DataAccess;
+using Bookings.Core.DTOs;
+using Bookings.Core.Interfaces;
+using Bookings.DataAccess;
 using Core.Models;
 using Core.Enums.Booking;
 using Core.Enums.User;
+using Core.Enums.Transaction;
 
-namespace Services.BLL.Services
+namespace Bookings.BLL.Services
 {
-    public class ServiceBookingService : IServiceBookingService
+    public class BookingService : IBookingService
     {
-        private readonly ServicesDbContext _db;
+        private readonly BookingsDbContext _db;
 
-        public ServiceBookingService(ServicesDbContext db)
+        public BookingService(BookingsDbContext db)
         {
             _db = db;
         }
@@ -52,6 +53,26 @@ namespace Services.BLL.Services
             {
                 var uni = await _db.Universities.FindAsync(dto.UniversityId.Value);
                 if (uni != null) universityName = uni.Name;
+            }
+
+            if (serviceType.Price > 0)
+            {
+                if (user.BalanceMP < serviceType.Price)
+                {
+                    return (false, "Insufficient MP points to book this service. Please go to your wallet to convert USD to MP.", null);
+                }
+                user.BalanceMP -= (int)serviceType.Price;
+
+                var tx = new WalletTransaction
+                {
+                    UserId = userId,
+                    Type = TransactionType.Withdraw,
+                    AmountUSD = 0,
+                    AmountMP = -(int)serviceType.Price,
+                    Description = $"Paid {serviceType.Price} MP for service: {serviceType.Name}",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.WalletTransactions.Add(tx);
             }
 
             var booking = new Booking
@@ -117,7 +138,7 @@ namespace Services.BLL.Services
                     b.ServiceTypeId == "representative_call"
                 ).ToList();
             }
-            else if (currentUserRole == "student")
+            else if (currentUserRole == "student" || currentUserRole == "moderator")
             {
                 offers = allBookings.Where(b =>
                     b.Status == BookingStatus.Open &&
@@ -174,7 +195,7 @@ namespace Services.BLL.Services
             else
             {
                 bool isRepOfUni = user.Role == UserRole.Representative && booking.UniversityId == user.UniversityId;
-                bool isVerifiedStudent = user.Role == UserRole.Student && user.IsVerified;
+                bool isVerifiedStudent = (user.Role == UserRole.Student || user.Role == UserRole.Moderator) && user.IsVerified;
 
                 if (!isRepOfUni && !isVerifiedStudent)
                 {
@@ -233,6 +254,27 @@ namespace Services.BLL.Services
 
             booking.Status = BookingStatus.Completed;
             booking.CompletedAt = DateTime.UtcNow;
+
+            if (booking.StudentEarning > 0 && booking.AcceptedBy.HasValue)
+            {
+                var provider = await _db.Users.FindAsync(booking.AcceptedBy.Value);
+                if (provider != null)
+                {
+                    provider.BalanceMP += (int)booking.StudentEarning;
+
+                    var tx = new WalletTransaction
+                    {
+                        UserId = provider.Id,
+                        Type = TransactionType.Deposit,
+                        AmountUSD = 0,
+                        AmountMP = (int)booking.StudentEarning,
+                        Description = $"Earned {booking.StudentEarning} MP for completing service: {booking.ServiceName}",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _db.WalletTransactions.Add(tx);
+                }
+            }
+
             await _db.SaveChangesAsync();
 
             var data = new

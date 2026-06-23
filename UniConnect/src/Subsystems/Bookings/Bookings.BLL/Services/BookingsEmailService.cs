@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Shared.Core.Interfaces;
 using Core.Models;
-using Services.DataAccess;
+using Bookings.DataAccess;
 
-namespace Services.BLL.Services
+namespace Bookings.BLL.Services
 {
-    public class ServicesEmailService : IEmailService
+    public class BookingsEmailService : IEmailService
     {
         private readonly IConfiguration _config;
-        private readonly ServicesDbContext _db;
+        private readonly BookingsDbContext _db;
 
-        public ServicesEmailService(IConfiguration config, ServicesDbContext db)
+        public BookingsEmailService(IConfiguration config, BookingsDbContext db)
         {
             _config = config;
             _db = db;
@@ -43,11 +43,11 @@ namespace Services.BLL.Services
                 _db.BackgroundEmails.Add(backgroundEmail);
                 await _db.SaveChangesAsync();
 
-                Console.WriteLine($"[ServicesEmailService] Queued background application email for applicant {applicantName}");
+                Console.WriteLine($"[BookingsEmailService] Queued background application email for applicant {applicantName}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[ServicesEmailService] Error: Failed to queue email: " + ex.Message);
+                Console.WriteLine("[BookingsEmailService] Error: Failed to queue email: " + ex.Message);
             }
         }
     }

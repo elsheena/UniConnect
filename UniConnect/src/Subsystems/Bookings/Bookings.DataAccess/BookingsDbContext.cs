@@ -6,11 +6,11 @@ using Core.Enums.Document;
 using Shared.DataAccess.Data;
 using System;
 
-namespace Services.DataAccess
+namespace Bookings.DataAccess
 {
-    public class ServicesDbContext : BaseDbContext
+    public class BookingsDbContext : BaseDbContext
     {
-        public ServicesDbContext(DbContextOptions<ServicesDbContext> options) : base(options)
+        public BookingsDbContext(DbContextOptions<BookingsDbContext> options) : base(options)
         {
         }
 

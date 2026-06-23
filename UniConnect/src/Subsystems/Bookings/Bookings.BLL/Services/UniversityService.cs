@@ -3,22 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Services.Core.DTOs;
-using Services.Core.Interfaces;
-using Services.DataAccess;
+using Bookings.Core.DTOs;
+using Bookings.Core.Interfaces;
+using Bookings.DataAccess;
 using Core.Models;
 using Core.Enums.Application;
 using Core.Enums.User;
 using Shared.Core.Interfaces;
 
-namespace Services.BLL.Services
+namespace Bookings.BLL.Services
 {
     public class UniversityService : IUniversityService
     {
-        private readonly ServicesDbContext _db;
+        private readonly BookingsDbContext _db;
         private readonly IEmailService _emailService;
 
-        public UniversityService(ServicesDbContext db, IEmailService emailService)
+        public UniversityService(BookingsDbContext db, IEmailService emailService)
         {
             _db = db;
             _emailService = emailService;

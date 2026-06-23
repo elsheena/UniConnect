@@ -1,6 +1,6 @@
 using System;
 
-namespace Services.Core.DTOs
+namespace Bookings.Core.DTOs
 {
     public record ApplyDto(string ProgramCode);
 

@@ -3,10 +3,10 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Services.Core.DTOs;
-using Services.Core.Interfaces;
+using Bookings.Core.DTOs;
+using Bookings.Core.Interfaces;
 
-namespace Services.API.Controllers
+namespace Bookings.API.Controllers
 {
     [ApiController]
     public class UniversitiesController : ControllerBase

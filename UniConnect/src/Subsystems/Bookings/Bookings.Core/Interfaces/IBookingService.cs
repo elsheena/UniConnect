@@ -1,11 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using Services.Core.DTOs;
+using Bookings.Core.DTOs;
 using Core.Models;
 
-namespace Services.Core.Interfaces
+namespace Bookings.Core.Interfaces
 {
-    public interface IServiceBookingService
+    public interface IBookingService
     {
         object GetServiceTypes();
         Task<(bool Success, string Error, Booking? Booking)> BookServiceAsync(Guid userId, BookServiceDto dto);

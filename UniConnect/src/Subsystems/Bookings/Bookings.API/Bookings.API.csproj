@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Services.BLL\Services.BLL.csproj" />
-    <ProjectReference Include="..\Services.DataAccess\Services.DataAccess.csproj" />
+    <ProjectReference Include="..\Bookings.BLL\Bookings.BLL.csproj" />
+    <ProjectReference Include="..\Bookings.DataAccess\Bookings.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>
