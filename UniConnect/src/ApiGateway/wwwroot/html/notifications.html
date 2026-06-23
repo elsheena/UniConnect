@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/notifications.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div class="container" style="max-width: 800px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h1>Notifications</h1>
+        <button class="btn btn-secondary btn-sm" onclick="markAllRead()">Mark all as read</button>
+      </div>
+
+      <div id="notif-list">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/notifications.js?v=4"></script>
+</body>
+</html>

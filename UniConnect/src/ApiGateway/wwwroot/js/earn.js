@@ -3,7 +3,7 @@ let currentTab = 'offers';
 async function loadEarnPage() {
   const user = await checkAuth();
   if (!user) return window.location.href = '/login';
-  if (user.role !== 'student' || !user.isVerified) {
+  if ((user.role !== 'student' && user.role !== 'moderator') || !user.isVerified) {
     window.location.href = '/profile';
     return;
   }
@@ -27,13 +27,13 @@ async function loadTabContent(tab) {
     try {
       const data = await API.getOffers();
       if (!data.offers || data.offers.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="inbox"></span></div><h3>No open offers</h3><p>Check back later for new service requests from applicants.</p></div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="inbox" data-size="48"></span></div><h3>No open offers</h3><p>Check back later for new service requests from applicants.</p></div>';
       } else {
         const cardTemplate = await fetchTemplate('/templates/earn-opportunity-card.html');
         container.innerHTML = data.offers.map(b => {
           const iconHtml = getIcon(b.serviceIcon, 24);
           const detailsText = `Requested by ${b.bookerName} • ${b.universityName || 'Any university'}${b.notes ? ' • "' + b.notes + '"' : ''}`;
-          const actionsHtml = `<button class="btn btn-sm btn-success" onclick="acceptOffer(${b.id})">Accept</button>`;
+          const actionsHtml = `<button class="btn btn-sm btn-success" onclick="acceptOffer('${b.id}')">Accept</button>`;
           
           return renderTemplate(cardTemplate, {
             iconHtml,
@@ -51,7 +51,7 @@ async function loadTabContent(tab) {
     try {
       const data = await API.getAcceptedServices();
       if (!data.bookings || data.bookings.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="list"></span></div><h3>No accepted services</h3><p>Accept offers to start earning.</p></div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="list" data-size="48"></span></div><h3>No accepted services</h3><p>Accept offers to start earning.</p></div>';
       } else {
         const cardTemplate = await fetchTemplate('/templates/earn-opportunity-card.html');
         container.innerHTML = data.bookings.map(b => {
@@ -61,7 +61,7 @@ async function loadTabContent(tab) {
           let actionsHtml = statusBadge(b.status);
           if (b.status === 'accepted') {
             actionsHtml += ` <a href="/chats.html?bookingId=${b.id}" class="btn btn-sm btn-secondary">Chat</a>`;
-            actionsHtml += ` <button class="btn btn-sm btn-success" onclick="completeBooking(${b.id})">Complete</button>`;
+            actionsHtml += ` <button class="btn btn-sm btn-success" onclick="completeBooking('${b.id}')">Complete</button>`;
           }
 
           return renderTemplate(cardTemplate, {

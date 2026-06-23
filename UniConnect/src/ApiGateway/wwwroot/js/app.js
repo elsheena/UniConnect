@@ -108,10 +108,16 @@ function showToast(message, type = 'success') {
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `
-    <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
-    <span>${message}</span>
-  `;
+  
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'toast-icon';
+  iconSpan.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  toast.appendChild(iconSpan);
+
+  const textSpan = document.createElement('span');
+  textSpan.textContent = message;
+  toast.appendChild(textSpan);
+
   document.body.appendChild(toast);
   setTimeout(() => toast.classList.add('show'), 10);
   setTimeout(() => {
@@ -148,8 +154,12 @@ function statusBadge(status) {
 
 // Fetch HTML template
 async function fetchTemplate(url) {
-  const separator = url.includes('?') ? '&' : '?';
-  const response = await fetch(`${url}${separator}v=2`);
+  let finalUrl = url;
+  if (url.startsWith('/templates/')) {
+    finalUrl = '/html' + url;
+  }
+  const separator = finalUrl.includes('?') ? '&' : '?';
+  const response = await fetch(`${finalUrl}${separator}v=2`);
   return await response.text();
 }
 
@@ -241,5 +251,29 @@ class EmptyStateComponent {
   }
 }
 window.EmptyStateComponent = EmptyStateComponent;
+
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const toggleBtn = input.nextElementSibling;
+  if (!toggleBtn) return;
+  
+  if (input.type === 'password') {
+    input.type = 'text';
+    const iconSpan = toggleBtn.querySelector('[data-icon]');
+    if (iconSpan) {
+      iconSpan.setAttribute('data-icon', 'eye-off');
+      if (window.getIcon) iconSpan.innerHTML = getIcon('eye-off', 16);
+    }
+  } else {
+    input.type = 'password';
+    const iconSpan = toggleBtn.querySelector('[data-icon]');
+    if (iconSpan) {
+      iconSpan.setAttribute('data-icon', 'eye');
+      if (window.getIcon) iconSpan.innerHTML = getIcon('eye', 16);
+    }
+  }
+}
+window.togglePasswordVisibility = togglePasswordVisibility;
 
 

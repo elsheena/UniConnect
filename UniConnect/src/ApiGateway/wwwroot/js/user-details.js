@@ -13,7 +13,11 @@ async function initPage() {
     targetUser = data.user;
     renderProfile();
   } catch (e) {
-    document.getElementById('profile-container').innerHTML = '<div class="empty-state"><p>User not found.</p></div>';
+    const pc = document.getElementById('profile-container');
+    if (pc) {
+      pc.innerHTML = '';
+      pc.appendChild(new EmptyStateComponent('User not found.').render());
+    }
   }
 }
 
@@ -21,157 +25,242 @@ async function renderProfile() {
   const container = document.getElementById('profile-container');
   const isSelf = currentUser.id === targetUser.id;
   const isAdmin = currentUser.role === 'admin';
-  const isMod = currentUser.role === 'moderator';
 
   try {
     const profileTemplate = await fetchTemplate('/templates/user-details/user-profile.html');
     
-    const avatarUrl = targetUser.avatarUrl || '/img/avatar_default.png';
-    const verificationBadge = targetUser.isVerified ? '<span style="color:var(--accent-blue);"><span data-icon="verify"></span></span>' : '';
-    const bannedBadge = targetUser.isBanned ? '<span class="badge badge-red">BANNED</span>' : '';
-    const mutedBadge = targetUser.isMuted ? '<span class="badge badge-yellow">MUTED</span>' : '';
-    const roleUpper = targetUser.role.toUpperCase();
-    const nationalityBadge = targetUser.nationality ? `<span class="badge badge-gray">${targetUser.nationality}</span>` : '';
-    const universityBadge = targetUser.universityName ? `<span class="badge badge-purple">${targetUser.universityName}</span>` : '';
-    
-    const messageButton = !isSelf ? `
-      <button class="btn btn-primary" onclick="startPrivateChat()">
-        <span data-icon="chat"></span> Message
-      </button>
-    ` : '';
+    // We render layout details
+    container.innerHTML = profileTemplate;
 
-    const email = isAdmin || isSelf ? targetUser.email : 'Hidden \u2022\u2022\u2022@\u2022\u2022\u2022';
-    const verificationStatus = targetUser.isVerified ? 'Verified Identity' : 'Pending Verification';
-    const createdAtDate = new Date(targetUser.createdAt).toLocaleDateString();
-    const balanceMP = targetUser.balanceMP || 0;
+    // Populate basic details
+    const avatarImg = document.getElementById('user-profile-avatar');
+    if (avatarImg && targetUser.avatarUrl && targetUser.avatarStatus === 'approved') {
+      avatarImg.src = targetUser.avatarUrl;
+    }
 
-    const adminActionsMenu = isAdmin && !isSelf ? `
-      <div class="admin-menu">
-        <h3 style="margin-bottom:20px; color:var(--accent-red); display:flex; align-items:center; gap:10px;">
-          <span data-icon="shield"></span> Moderation Actions
-        </h3>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 20px;">
-          ${targetUser.isMuted 
-            ? `<button class="btn btn-secondary" onclick="adminAction('unmute')">Unmute User</button>`
-            : `<button class="btn btn-secondary" onclick="adminAction('mute')">Mute User</button>`
+    const fullNameEl = document.getElementById('user-full-name');
+    if (fullNameEl) fullNameEl.textContent = targetUser.fullName;
+
+    const roleBadgeEl = document.getElementById('user-role-badge');
+    if (roleBadgeEl) {
+      roleBadgeEl.textContent = targetUser.role.toUpperCase();
+      const colors = {
+        student: 'blue',
+        applicant: 'purple',
+        representative: 'purple',
+        admin: 'red',
+        moderator: 'orange',
+        muted: 'yellow'
+      };
+      const color = colors[targetUser.role] || 'gray';
+      roleBadgeEl.className = `badge badge-${color}`;
+    }
+
+    const emailEl = document.getElementById('user-email-text');
+    if (emailEl) {
+      emailEl.textContent = (isAdmin || isSelf) ? targetUser.email : 'Hidden \u2022\u2022\u2022@\u2022\u2022\u2022';
+    }
+
+    const statusEl = document.getElementById('user-status-text');
+    if (statusEl) {
+      statusEl.textContent = targetUser.isVerified ? 'Verified Identity' : 'Pending Verification';
+    }
+
+    const createdAtEl = document.getElementById('user-membersince-text');
+    if (createdAtEl) {
+      createdAtEl.textContent = new Date(targetUser.createdAt).toLocaleDateString();
+    }
+
+    const balanceEl = document.getElementById('user-balance-mp-text');
+    if (balanceEl) {
+      balanceEl.textContent = targetUser.balanceMP || 0;
+    }
+
+    // Toggle nationality & university badges
+    const nationalityBadge = document.getElementById('user-nationality-badge');
+    if (nationalityBadge && targetUser.nationality) {
+      nationalityBadge.textContent = targetUser.nationality;
+      nationalityBadge.style.display = 'inline-block';
+    }
+
+    const universityBadge = document.getElementById('user-university-badge');
+    if (universityBadge && targetUser.universityName) {
+      universityBadge.textContent = targetUser.universityName;
+      universityBadge.style.display = 'inline-block';
+    }
+
+    // Toggle verified, muted, banned and graduated badges
+    if (targetUser.isVerified) {
+      document.getElementById('user-verified-badge').style.display = 'inline-flex';
+    }
+    if (targetUser.isBanned) {
+      document.getElementById('user-banned-badge').style.display = 'inline-block';
+    }
+    if (targetUser.isMuted) {
+      document.getElementById('user-muted-badge').style.display = 'inline-block';
+    }
+
+    const isGraduated = (targetUser.role === 'student' || targetUser.role === 'moderator') && targetUser.graduationDate && new Date(targetUser.graduationDate) < new Date();
+    if (isGraduated) {
+      document.getElementById('user-graduated-badge').style.display = 'inline-flex';
+    }
+
+    // Toggle graduation date text
+    const gradContainer = document.getElementById('user-graduation-container');
+    const gradText = document.getElementById('user-graduation-text');
+    if (gradContainer && gradText && (targetUser.role === 'student' || targetUser.role === 'moderator') && targetUser.graduationDate) {
+      gradText.textContent = new Date(targetUser.graduationDate).toLocaleDateString();
+      gradContainer.style.display = 'block';
+    }
+
+    // Render Message button if not self
+    const messageBtnContainer = document.getElementById('message-button-container');
+    if (messageBtnContainer && !isSelf) {
+      const msgBtn = document.createElement('button');
+      msgBtn.className = 'btn btn-primary';
+      
+      const chatIcon = document.createElement('span');
+      chatIcon.setAttribute('data-icon', 'chat');
+      msgBtn.appendChild(chatIcon);
+      msgBtn.appendChild(document.createTextNode(' Message'));
+      msgBtn.addEventListener('click', startPrivateChat);
+      
+      messageBtnContainer.appendChild(msgBtn);
+    }
+
+    // Admin/Moderator Moderation Menu
+    const isMod = currentUser.role === 'moderator';
+    const isModOrAdmin = isAdmin || isMod;
+    if (isModOrAdmin && !isSelf) {
+      const menuContainer = document.getElementById('admin-actions-menu-container');
+      if (menuContainer) {
+        menuContainer.style.display = 'block';
+
+        // Mute button
+        const muteBtn = document.getElementById('admin-btn-mute');
+        if (muteBtn) {
+          muteBtn.textContent = targetUser.isMuted ? 'Unmute User' : 'Mute User';
+          muteBtn.onclick = () => adminAction(targetUser.isMuted ? 'unmute' : 'mute');
+        }
+
+        // Ban button
+        const banBtn = document.getElementById('admin-btn-ban');
+        if (banBtn) {
+          banBtn.textContent = targetUser.isBanned ? 'Unban User' : 'Ban User';
+          banBtn.onclick = () => adminAction(targetUser.isBanned ? 'unban' : 'ban');
+        }
+
+        // Role promotion/demotion button
+        const roleBtn = document.getElementById('admin-btn-role');
+        if (roleBtn) {
+          if (isMod) {
+            roleBtn.style.display = 'none';
+          } else {
+            roleBtn.style.display = 'inline-block';
+            roleBtn.textContent = targetUser.role !== 'moderator' ? 'Make Moderator' : 'Remove Moderator';
+            roleBtn.onclick = () => adminAction(targetUser.role !== 'moderator' ? 'promote' : 'demote');
           }
-          
-          ${targetUser.isBanned
-            ? `<button class="btn btn-secondary" onclick="adminAction('unban')">Unban User</button>`
-            : `<button class="btn btn-secondary" onclick="adminAction('ban')">Ban User</button>`
-          }
+        }
 
-          ${targetUser.role !== 'moderator' 
-            ? `<button class="btn btn-secondary" onclick="adminAction('promote')">Make Moderator</button>`
-            : `<button class="btn btn-secondary" onclick="adminAction('demote')">Remove Moderator</button>`
-          }
-        </div>
+        // MP actions (Deduct / Add)
+        const deductBtn = document.getElementById('admin-btn-deduct-mp');
+        if (deductBtn) deductBtn.onclick = deductMP;
 
-        <div style="border-top:1px solid var(--border-subtle); padding-top:20px; margin-top:20px;">
-          <h4 style="margin-bottom:12px; color:var(--text-primary); font-size: 0.9rem;">Deduct MP Points (Bad Behaviour)</h4>
-          <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
-            <div class="form-group" style="flex:1; min-width:120px; margin-bottom:0;">
-              <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Amount to Deduct</label>
-              <input type="number" id="deduct-mp-amount" placeholder="e.g. 100" min="1" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
-            </div>
-            <div class="form-group" style="flex:2; min-width:200px; margin-bottom:0;">
-              <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Reason for Deduction</label>
-              <input type="text" id="deduct-mp-reason" placeholder="e.g. Spammed chat, inappropriate behavior" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
-            </div>
-            <button class="btn btn-secondary" style="background:var(--accent-red); border-color:var(--accent-red); color:white; height:40px;" onclick="deductMP()">Deduct Points</button>
-          </div>
-        </div>
+        const addBtn = document.getElementById('admin-btn-add-mp');
+        if (addBtn) addBtn.onclick = addMP;
 
-        <div style="border-top:1px solid var(--border-subtle); padding-top:20px; margin-top:20px;">
-          <h4 style="margin-bottom:12px; color:var(--text-primary); font-size: 0.9rem;">Add MP Points (Reward)</h4>
-          <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
-            <div class="form-group" style="flex:1; min-width:120px; margin-bottom:0;">
-              <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Amount to Add</label>
-              <input type="number" id="add-mp-amount" placeholder="e.g. 100" min="1" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
-            </div>
-            <div class="form-group" style="flex:2; min-width:200px; margin-bottom:0;">
-              <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Reason for Addition</label>
-              <input type="text" id="add-mp-reason" placeholder="e.g. Active participation, helping others" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
-            </div>
-            <button class="btn btn-primary" style="background:var(--accent-green); border-color:var(--accent-green); color:white; height:40px;" onclick="addMP()">Add Points</button>
-          </div>
-        </div>
-      </div>
-    ` : '';
+        const deductMpContainer = document.getElementById('admin-deduct-mp-container');
+        const addMpContainer = document.getElementById('admin-add-mp-container');
+        if (isMod) {
+          if (deductMpContainer) deductMpContainer.style.display = 'none';
+          if (addMpContainer) addMpContainer.style.display = 'none';
+        } else {
+          if (deductMpContainer) deductMpContainer.style.display = 'block';
+          if (addMpContainer) addMpContainer.style.display = 'block';
+        }
+      }
+    }
 
-    let adminDocumentsHtml = '';
+    // Admin Documents list
     if (isAdmin) {
       try {
         const statusData = await API.getVerificationStatus(targetUser.id);
         const docs = statusData.documents || [];
-        if (docs.length > 0) {
-          const docRows = docs.map(d => {
-            const typeDisplayName = d.type === 'passport_id' ? 'ID / Passport' : d.type === 'student_card' ? 'Student Card' : 'Profile Picture';
-            const statusBadge = d.status === 'approved' 
-              ? '<span class="badge badge-green">Approved</span>' 
-              : d.status === 'pending' 
-                ? '<span class="badge badge-yellow">Pending</span>' 
-                : `<span class="badge badge-red" title="${d.reviewNote || ''}">Rejected</span>`;
-            
-            return `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border-subtle);">
-                <div>
-                  <strong>${typeDisplayName}</strong>
-                  <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">Original: ${d.originalName}</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:12px;">
-                  ${statusBadge}
-                  <a href="/uploads/${d.filename}" target="_blank" class="btn btn-xs btn-secondary"><span data-icon="eye"></span> View</a>
-                </div>
-              </div>
-            `;
-          }).join('');
+        const docList = document.getElementById('admin-documents-list');
+        const docsContainer = document.getElementById('admin-documents-container');
 
-          adminDocumentsHtml = `
-            <div class="info-card" style="margin-top:30px; grid-column: span 2;">
-              <h3 style="margin-bottom:15px; color:var(--text-primary); display:flex; align-items:center; gap:10px;">
-                <span data-icon="document"></span> Uploaded Documents (Admin View)
-              </h3>
-              <div style="display:flex; flex-direction:column; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; background:var(--bg-body);">
-                ${docRows}
-              </div>
-            </div>
-          `;
-        } else {
-          adminDocumentsHtml = `
-            <div class="info-card" style="margin-top:30px; grid-column: span 2;">
-              <h3 style="margin-bottom:15px; color:var(--text-primary); display:flex; align-items:center; gap:10px;">
-                <span data-icon="document"></span> Uploaded Documents (Admin View)
-              </h3>
-              <p style="color:var(--text-muted); font-size:0.85rem;">No documents uploaded by this user.</p>
-            </div>
-          `;
+        if (docsContainer && docList) {
+          docsContainer.style.display = 'block';
+          docList.innerHTML = '';
+
+          if (docs.length === 0) {
+            const emptyP = document.createElement('p');
+            emptyP.style.color = 'var(--text-muted)';
+            emptyP.style.fontSize = '0.85rem';
+            emptyP.style.padding = '16px';
+            emptyP.textContent = 'No documents uploaded by this user.';
+            docList.appendChild(emptyP);
+          } else {
+            docs.forEach(d => {
+              const row = document.createElement('div');
+              row.style.display = 'flex';
+              row.style.justifyContent = 'space-between';
+              row.style.alignItems = 'center';
+              row.style.padding = '12px';
+              row.style.borderBottom = '1px solid var(--border-subtle)';
+
+              const infoDiv = document.createElement('div');
+              const typeStrong = document.createElement('strong');
+              const typeDisplayName = d.type === 'passport_id' ? 'ID / Passport' : d.type === 'student_card' ? 'Student Card' : 'Profile Picture';
+              typeStrong.textContent = typeDisplayName;
+              infoDiv.appendChild(typeStrong);
+
+              const originalNameDiv = document.createElement('div');
+              originalNameDiv.style.fontSize = '0.75rem';
+              originalNameDiv.style.color = 'var(--text-muted)';
+              originalNameDiv.style.marginTop = '2px';
+              originalNameDiv.textContent = `Original: ${d.originalName}`;
+              infoDiv.appendChild(originalNameDiv);
+
+              const actionsDiv = document.createElement('div');
+              actionsDiv.style.display = 'flex';
+              actionsDiv.style.alignItems = 'center';
+              actionsDiv.style.gap = '12px';
+
+              const badge = document.createElement('span');
+              badge.textContent = d.status.charAt(0).toUpperCase() + d.status.slice(1);
+              badge.className = `badge badge-${d.status === 'approved' ? 'green' : d.status === 'pending' ? 'yellow' : 'red'}`;
+              if (d.status === 'rejected' && d.reviewNote) {
+                badge.title = d.reviewNote;
+              }
+              actionsDiv.appendChild(badge);
+
+              const viewLink = document.createElement('a');
+              viewLink.href = `/uploads/${d.filename}`;
+              viewLink.target = '_blank';
+              viewLink.className = 'btn btn-xs btn-secondary';
+              
+              const viewIcon = document.createElement('span');
+              viewIcon.setAttribute('data-icon', 'eye');
+              viewLink.appendChild(viewIcon);
+              viewLink.appendChild(document.createTextNode(' View'));
+              actionsDiv.appendChild(viewLink);
+
+              row.appendChild(infoDiv);
+              row.appendChild(actionsDiv);
+              docList.appendChild(row);
+            });
+          }
         }
       } catch (docErr) {
         console.error('Failed to load user documents', docErr);
-        adminDocumentsHtml = `<div class="info-card" style="margin-top:30px; grid-column: span 2;"><p style="color:var(--accent-red);">Failed to load user documents.</p></div>`;
       }
     }
 
-    container.innerHTML = renderTemplate(profileTemplate, {
-      avatarUrl,
-      fullName: targetUser.fullName,
-      verificationBadge,
-      bannedBadge,
-      mutedBadge,
-      roleUpper,
-      nationalityBadge,
-      universityBadge,
-      messageButton,
-      email,
-      verificationStatus,
-      createdAtDate,
-      balanceMP,
-      adminActionsMenu,
-      adminDocumentsHtml
-    });
   } catch (e) {
-    container.innerHTML = '<div class="empty-state"><p>Error displaying user profile.</p></div>';
+    console.error(e);
+    container.innerHTML = '';
+    container.appendChild(new EmptyStateComponent('Error displaying user profile.').render());
   }
 
   // Render icons for dynamically inserted HTML elements
@@ -179,19 +268,65 @@ async function renderProfile() {
     const name = el.getAttribute('data-icon');
     el.innerHTML = getIcon(name, 14);
   });
+
+  const cancelConfirmBtn = document.getElementById('btn-confirm-cancel');
+  if (cancelConfirmBtn) {
+    cancelConfirmBtn.addEventListener('click', closeConfirmModal);
+  }
+  const submitConfirmBtn = document.getElementById('btn-confirm-submit');
+  if (submitConfirmBtn) {
+    submitConfirmBtn.addEventListener('click', submitConfirmAction);
+  }
 }
 
 async function startPrivateChat() {
    try {
      const res = await API.request('POST', '/api/chats', { otherUserId: targetUser.id });
-     window.location.href = `/messages?chatId=${res.chatId}`;
+     window.location.href = `/chats.html?id=${res.chatId}`;
    } catch (e) {
      showToast(e.error || 'Failed to start chat.', 'error');
    }
 }
 
+let pendingAction = null;
+
 async function adminAction(action) {
-  if (!confirm(`Are you sure you want to perform: ${action}?`)) return;
+  if (action === 'promote' || action === 'demote') {
+    pendingAction = action;
+    const titleEl = document.getElementById('confirm-modal-title');
+    const textEl = document.getElementById('confirm-modal-text');
+    if (titleEl && textEl) {
+      titleEl.textContent = 'Are you sure?';
+      textEl.textContent = action === 'promote'
+        ? `Are you sure you want to make ${targetUser.fullName} a moderator?`
+        : `Are you sure you want to remove moderator status from ${targetUser.fullName}?`;
+    }
+    const modal = document.getElementById('confirm-modal');
+    if (modal) {
+      modal.classList.add('active');
+    }
+  } else {
+    if (!confirm(`Are you sure you want to perform: ${action}?`)) return;
+    try {
+      await API.moderateUser(targetUser.id, action);
+      showToast('Action successful!', 'success');
+      initPage(); // Reload
+    } catch (e) {
+      showToast(e.error || 'Mod action failed.', 'error');
+    }
+  }
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById('confirm-modal');
+  if (modal) modal.classList.remove('active');
+  pendingAction = null;
+}
+
+async function submitConfirmAction() {
+  if (!pendingAction) return;
+  const action = pendingAction;
+  closeConfirmModal();
   try {
     await API.moderateUser(targetUser.id, action);
     showToast('Action successful!', 'success');

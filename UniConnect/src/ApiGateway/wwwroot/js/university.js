@@ -63,10 +63,48 @@ async function initPage() {
     const servicesTemplate = await fetchTemplate('/templates/university/campus-services.html');
     const serviceOptions = services.map(s => `<option value="${s.id}">${s.name} (${s.price > 0 ? s.price + ' MP' : 'Free'})</option>`).join('');
     
+    // Extract rating, founded year, etc. based on university name
+    let foundedYear = 1990;
+    let rating = '4.5';
+    let globalRank = '800';
+    let campusType = 'Urban';
+
+    const uName = uni.name.toLowerCase();
+    if (uName.includes('hse') || uName.includes('economics')) {
+      foundedYear = 1992;
+      rating = '4.9';
+      globalRank = '298';
+      campusType = 'Multi-Campus';
+    } else if (uName.includes('itmo')) {
+      foundedYear = 1900;
+      rating = '4.8';
+      globalRank = '365';
+      campusType = 'Urban Tech';
+    } else if (uName.includes('lomonosov') || uName.includes('msu') || uName.includes('moscow state')) {
+      foundedYear = 1755;
+      rating = '5.0';
+      globalRank = '75';
+      campusType = 'Classic Campus';
+    } else if (uName.includes('rudn') || uName.includes('peoples') || uName.includes('friendship')) {
+      foundedYear = 1960;
+      rating = '4.7';
+      globalRank = '435';
+      campusType = 'Green Campus';
+    } else if (uName.includes('tsu') || uName.includes('tomsk state')) {
+      foundedYear = 1878;
+      rating = '4.7';
+      globalRank = '264';
+      campusType = 'Classic Siberian';
+    }
+
     const servicesHtml = renderTemplate(servicesTemplate, {
       description: uni.description,
       serviceOptions,
-      uniId: uni.id
+      uniId: uni.id,
+      foundedYear,
+      rating,
+      globalRank,
+      campusType
     });
 
     // Combine all
@@ -139,9 +177,9 @@ async function bookUniService(uniId) {
   const notes = document.getElementById('booking-notes').value;
   
   try {
-    await API.request('POST', '/api/services/book', { universityId: uniId, serviceTypeId: serviceId, notes });
+    await API.bookService({ universityId: uniId, serviceTypeId: serviceId, notes });
     showToast('Booking request sent successfully!');
-    setTimeout(() => window.location.href = '/profile', 1500);
+    setTimeout(() => window.location.href = '/profile.html', 1500);
   } catch (e) {
     showToast(e.error || 'Failed to send booking.', 'error');
   }

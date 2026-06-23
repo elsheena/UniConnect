@@ -1,8 +1,15 @@
+function getIconNode(name, size = 14) {
+  const svgText = getIcon(name, size);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgText, 'image/svg+xml');
+  return doc.documentElement;
+}
+
 let adminTab = 'docs';
 
 async function loadAdmin() {
   const user = await checkAuth();
-  if (!user || (user.role !== 'admin' && user.role !== 'representative')) {
+  if (!user || (user.role !== 'admin' && user.role !== 'representative' && user.role !== 'moderator')) {
     showToast('Access required.', 'error');
     return window.location.href = '/profile';
   }
@@ -11,8 +18,53 @@ async function loadAdmin() {
   // Adjust tabs visibility based on role
   const tabsEl = document.querySelector('.tabs');
   if (user.role === 'representative') {
-    tabsEl.innerHTML = `<button class="tab active" onclick="switchAdminTab('docs')"><span data-icon="document"></span> Pending Documents</button>`;
+    tabsEl.textContent = ''; // clear all other tabs
+    const docBtn = document.createElement('button');
+    docBtn.className = 'tab active';
+    docBtn.id = 'tab-docs';
+    
+    const iconSpan = document.createElement('span');
+    iconSpan.setAttribute('data-icon', 'document');
+    iconSpan.appendChild(getIconNode('document', 14));
+    
+    docBtn.appendChild(iconSpan);
+    docBtn.appendChild(document.createTextNode(' Pending Documents'));
+    docBtn.addEventListener('click', () => switchAdminTab('docs'));
+    tabsEl.appendChild(docBtn);
+
     document.getElementById('admin-stats').style.display = 'none';
+  } else if (user.role === 'moderator') {
+    tabsEl.textContent = ''; // clear all other tabs
+    const chatBtn = document.createElement('button');
+    chatBtn.className = 'tab active';
+    chatBtn.id = 'tab-chats';
+    
+    const iconSpan = document.createElement('span');
+    iconSpan.setAttribute('data-icon', 'chat');
+    iconSpan.appendChild(getIconNode('chat', 14));
+    
+    chatBtn.appendChild(iconSpan);
+    chatBtn.appendChild(document.createTextNode(' Moderation'));
+    chatBtn.addEventListener('click', () => switchAdminTab('chats'));
+    tabsEl.appendChild(chatBtn);
+
+    document.getElementById('admin-stats').style.display = 'none';
+  } else {
+    // Bind click event listeners dynamically for admin role
+    const tabDocs = document.getElementById('tab-docs');
+    if (tabDocs) tabDocs.addEventListener('click', () => switchAdminTab('docs'));
+    const tabGroups = document.getElementById('tab-groups');
+    if (tabGroups) tabGroups.addEventListener('click', () => switchAdminTab('groups'));
+    const tabUsers = document.getElementById('tab-users');
+    if (tabUsers) tabUsers.addEventListener('click', () => switchAdminTab('users'));
+    const tabChats = document.getElementById('tab-chats');
+    if (tabChats) tabChats.addEventListener('click', () => switchAdminTab('chats'));
+
+    // Bind modal actions dynamically
+    const btnCancelReject = document.getElementById('btn-cancel-reject');
+    if (btnCancelReject) btnCancelReject.addEventListener('click', closeRejectModal);
+    const btnSubmitReject = document.getElementById('btn-submit-reject');
+    if (btnSubmitReject) btnSubmitReject.addEventListener('click', submitRejection);
   }
 
   // Stats
@@ -29,13 +81,17 @@ async function loadAdmin() {
     } catch {}
   }
 
-  switchAdminTab('docs');
+  if (user.role === 'moderator') {
+    switchAdminTab('chats');
+  } else {
+    switchAdminTab('docs');
+  }
 }
 
 function switchAdminTab(tab) {
   adminTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  const activeTabEl = document.querySelector(`.tab[onclick="switchAdminTab('${tab}')"]`);
+  const activeTabEl = document.getElementById(`tab-${tab}`);
   if (activeTabEl) {
     activeTabEl.classList.add('active');
   }
@@ -126,52 +182,184 @@ async function loadAdminContent(tab) {
   } else if (tab === 'users') {
     try {
       const data = await API.getAllUsers();
-      const tableTemplate = await fetchTemplate('/templates/admin/users-table.html');
-      const rowTemplate = await fetchTemplate('/templates/admin/users-row.html');
-      
-      const rowsHtml = data.users.map(u => {
-        return renderTemplate(rowTemplate, {
-          id: u.id,
-          fullName: u.fullName,
-          email: u.email,
-          roleBadgeHtml: statusBadge(u.role),
-          verifiedBadgeHtml: u.isVerified ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>',
-          universityName: u.universityName || '—'
-        });
-      }).join('');
+      window.allUsersCache = data.users;
+      window.userCurrentPage = 1;
 
-      container.innerHTML = renderTemplate(tableTemplate, { rowsHtml });
-    } catch {
+      const listTemplate = await fetchTemplate('/templates/admin/users-list.html');
+      container.innerHTML = listTemplate;
+
+      const uniFilter = document.getElementById('user-uni-filter');
+      if (uniFilter) {
+        const universities = [...new Set(data.users.map(u => u.universityName).filter(Boolean))].sort();
+        universities.forEach(uniName => {
+          const opt = document.createElement('option');
+          opt.value = uniName;
+          opt.textContent = uniName;
+          uniFilter.appendChild(opt);
+        });
+      }
+
+      const cardTemplate = await fetchTemplate('/templates/admin/user-card.html');
+
+      const renderUsersList = async () => {
+        const query = document.getElementById('user-search-input').value.toLowerCase().trim();
+        const role = document.getElementById('user-role-filter').value;
+        const uni = document.getElementById('user-uni-filter').value;
+        const verified = document.getElementById('user-verified-filter').value;
+        const pageSize = parseInt(document.getElementById('user-page-size').value);
+
+        const filtered = window.allUsersCache.filter(u => {
+          const matchQuery = !query || u.fullName.toLowerCase().includes(query) || u.email.toLowerCase().includes(query);
+          const matchRole = !role || u.role === role;
+          const matchUni = !uni || u.universityName === uni;
+          const matchVerified = !verified || (verified === 'yes' ? u.isVerified : !u.isVerified);
+
+          return matchQuery && matchRole && matchUni && matchVerified;
+        });
+
+        const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+        if (window.userCurrentPage > totalPages) {
+          window.userCurrentPage = totalPages;
+        }
+        if (window.userCurrentPage < 1) {
+          window.userCurrentPage = 1;
+        }
+
+        const startIndex = (window.userCurrentPage - 1) * pageSize;
+        const paginated = filtered.slice(startIndex, startIndex + pageSize);
+
+        const grid = document.getElementById('users-cards-grid');
+        grid.innerHTML = '';
+
+        if (paginated.length === 0) {
+          const noMatchDiv = document.createElement('div');
+          noMatchDiv.style.textAlign = 'center';
+          noMatchDiv.style.padding = '40px 20px';
+          noMatchDiv.style.gridColumn = '1 / -1';
+          noMatchDiv.style.color = 'var(--text-muted)';
+          noMatchDiv.textContent = 'No users match the selected filters.';
+          grid.appendChild(noMatchDiv);
+        } else {
+          for (const u of paginated) {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.innerHTML = renderTemplate(cardTemplate, { id: u.id, fullName: u.fullName, email: u.email });
+            const cardEl = cardWrapper.firstElementChild;
+
+            const roleBadge = cardEl.querySelector('.user-card-role-badge');
+            if (roleBadge) {
+              const colors = {
+                student: 'blue',
+                applicant: 'purple',
+                representative: 'purple',
+                admin: 'red',
+                moderator: 'orange',
+                muted: 'yellow'
+              };
+              const color = colors[u.role] || 'gray';
+              roleBadge.textContent = u.role.toUpperCase();
+              roleBadge.className = `badge badge-${color}`;
+            }
+
+            const verifiedBadge = cardEl.querySelector('.user-card-verified-badge');
+            if (verifiedBadge) {
+              verifiedBadge.textContent = u.isVerified ? 'Verified' : 'Unverified';
+              verifiedBadge.className = `badge badge-${u.isVerified ? 'green' : 'gray'}`;
+            }
+
+            const uniName = cardEl.querySelector('.user-card-uni-name');
+            if (uniName) {
+              uniName.textContent = u.universityName || '—';
+              uniName.title = u.universityName || '—';
+            }
+
+            const gradRow = cardEl.querySelector('.user-card-graduation-row');
+            const gradDate = cardEl.querySelector('.user-card-grad-date');
+            if (gradRow && gradDate) {
+              if (u.graduationDate) {
+                gradDate.textContent = new Date(u.graduationDate).toLocaleDateString();
+                gradRow.style.display = 'flex';
+              } else {
+                gradRow.style.display = 'none';
+              }
+            }
+
+            grid.appendChild(cardEl);
+          }
+        }
+
+        const info = document.getElementById('pagination-info');
+        if (info) {
+          info.textContent = `Page ${window.userCurrentPage} of ${totalPages}`;
+        }
+
+        const prevBtn = document.getElementById('btn-prev-page');
+        if (prevBtn) {
+          prevBtn.disabled = window.userCurrentPage === 1;
+        }
+
+        const nextBtn = document.getElementById('btn-next-page');
+        if (nextBtn) {
+          nextBtn.disabled = window.userCurrentPage === totalPages;
+        }
+      };
+
+      const handlePrevPage = () => {
+        if (window.userCurrentPage > 1) {
+          window.userCurrentPage--;
+          renderUsersList();
+        }
+      };
+
+      const handleNextPage = () => {
+        window.userCurrentPage++;
+        renderUsersList();
+      };
+
+      document.getElementById('user-search-input').addEventListener('input', () => {
+        window.userCurrentPage = 1;
+        renderUsersList();
+      });
+      document.getElementById('user-role-filter').addEventListener('change', () => {
+        window.userCurrentPage = 1;
+        renderUsersList();
+      });
+      document.getElementById('user-uni-filter').addEventListener('change', () => {
+        window.userCurrentPage = 1;
+        renderUsersList();
+      });
+      document.getElementById('user-verified-filter').addEventListener('change', () => {
+        window.userCurrentPage = 1;
+        renderUsersList();
+      });
+      document.getElementById('user-page-size').addEventListener('change', () => {
+        window.userCurrentPage = 1;
+        renderUsersList();
+      });
+
+      document.getElementById('btn-prev-page').addEventListener('click', handlePrevPage);
+      document.getElementById('btn-next-page').addEventListener('click', handleNextPage);
+
+      renderUsersList();
+
+    } catch (err) {
+      console.error(err);
       container.innerHTML = '<div class="empty-state"><p>Failed to load users.</p></div>';
     }
   } else if (tab === 'chats') {
     try {
-      const response = await fetch('/api/admin/chats');
-      const data = await response.json();
-      if (!data.conversations || data.conversations.length === 0) {
-        container.innerHTML = '<div class="empty-state"><h3>No active chats</h3><p>There are no messages on the platform yet.</p></div>';
-      } else {
-        const chatCardTemplate = await fetchTemplate('/templates/admin/chat-card.html');
-        const cardsHtml = data.conversations.map(c => {
-          return renderTemplate(chatCardTemplate, {
-            id: c.id,
-            title: c.title,
-            type: c.type,
-            badgeClass: c.badgeClass,
-            lastMessage: c.lastMessage,
-            timestampFormatted: formatDate(c.timestamp)
-          });
-        }).join('');
-        container.innerHTML = `<div class="grid-2">${cardsHtml}</div>`;
-        
-        // Re-render icons
-        container.querySelectorAll('[data-icon]').forEach(el => {
-          const name = el.getAttribute('data-icon');
-          el.innerHTML = getIcon(name, 14);
-        });
-      }
+      const panelHtml = await fetchTemplate('/templates/admin/moderation-panel.html');
+      container.innerHTML = panelHtml;
+
+      container.querySelectorAll('[data-icon]').forEach(el => {
+        const name = el.getAttribute('data-icon');
+        el.appendChild(getIconNode(name, 18));
+      });
+
+      loadReportedMessages();
+      loadActiveChats();
     } catch (e) {
-      container.innerHTML = '<div class="empty-state"><p>Failed to load chat conversations.</p></div>';
+      container.textContent = '';
+      container.appendChild(new EmptyStateComponent('Failed to load moderation panel.').render());
     }
   }
 }
@@ -277,6 +465,136 @@ async function verifyGroupReq(reqId, action) {
     showToast(e.error || 'Failed to process request.', 'error');
   }
 }
+
+async function loadReportedMessages() {
+  const listEl = document.getElementById('reported-messages-list');
+  if (!listEl) return;
+
+  try {
+    const response = await fetch('/api/admin/reports');
+    const data = await response.json();
+    
+    if (!data.reports || data.reports.length === 0) {
+      listEl.textContent = '';
+      listEl.appendChild(new EmptyStateComponent('No pending message reports.').render());
+      return;
+    }
+
+    const template = await fetchTemplate('/templates/admin/report-card.html');
+    
+    listEl.innerHTML = data.reports.map(r => {
+      const dateStr = formatDate(r.reportedAt);
+      return renderTemplate(template, {
+        id: r.id,
+        chatType: r.chatType,
+        dateStr,
+        reporterName: r.reporterName,
+        reason: r.reason,
+        senderName: r.senderName,
+        messageText: r.messageText
+      });
+    }).join('');
+
+    // Bind event listeners dynamically
+    listEl.querySelectorAll('.btn-dismiss-report').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        resolveReport(id, 'dismiss');
+      });
+    });
+    listEl.querySelectorAll('.btn-delete-message').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        resolveReport(id, 'delete_message');
+      });
+    });
+    listEl.querySelectorAll('.btn-mute-sender').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        resolveReport(id, 'mute_sender');
+      });
+    });
+    listEl.querySelectorAll('.btn-ban-sender').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        resolveReport(id, 'ban_sender');
+      });
+    });
+
+    listEl.querySelectorAll('[data-icon]').forEach(el => {
+      const name = el.getAttribute('data-icon');
+      el.textContent = '';
+      el.appendChild(getIconNode(name, 12));
+    });
+
+  } catch (e) {
+    console.error(e);
+    listEl.textContent = '';
+    listEl.appendChild(new EmptyStateComponent('Failed to load reports.').render());
+  }
+}
+
+async function resolveReport(reportId, action) {
+  if (!confirm(`Are you sure you want to perform action: ${action.replace('_', ' ')}?`)) return;
+  try {
+    const res = await fetch(`/api/admin/reports/${reportId}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action })
+    });
+    const data = await res.json();
+    if (!res.ok) throw data;
+    showToast('Report updated successfully!', 'success');
+    loadAdminContent('chats');
+  } catch (e) {
+    showToast(e.error || 'Failed to update report.', 'error');
+  }
+}
+
+async function loadActiveChats() {
+  const listEl = document.getElementById('active-chats-list');
+  if (!listEl) return;
+
+  try {
+    const response = await fetch('/api/admin/chats');
+    const data = await response.json();
+    if (!data.conversations || data.conversations.length === 0) {
+      listEl.textContent = '';
+      listEl.appendChild(new EmptyStateComponent('No active chats', 'There are no messages on the platform yet.').render());
+    } else {
+      const chatCardTemplate = await fetchTemplate('/templates/admin/chat-card.html');
+      const cardsHtml = data.conversations.map(c => {
+        return renderTemplate(chatCardTemplate, {
+          id: c.id,
+          title: c.title,
+          type: c.type,
+          badgeClass: c.badgeClass,
+          lastMessage: c.lastMessage,
+          timestampFormatted: formatDate(c.timestamp)
+        });
+      }).join('');
+      
+      const grid = document.createElement('div');
+      grid.className = 'grid-2';
+      grid.innerHTML = cardsHtml;
+      listEl.textContent = '';
+      listEl.appendChild(grid);
+      
+      listEl.querySelectorAll('[data-icon]').forEach(el => {
+        const name = el.getAttribute('data-icon');
+        el.textContent = '';
+        el.appendChild(getIconNode(name, 14));
+      });
+    }
+  } catch (e) {
+    listEl.textContent = '';
+    listEl.appendChild(new EmptyStateComponent('Failed to load active chats.').render());
+  }
+}
+
+window.loadReportedMessages = loadReportedMessages;
+window.resolveReport = resolveReport;
+window.loadActiveChats = loadActiveChats;
 
 document.addEventListener('DOMContentLoaded', () => {
   loadAdmin();

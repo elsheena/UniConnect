@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Requests — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div class="container">
+      <div class="page-header">
+        <h1><span data-icon="list"></span> Service Requests</h1>
+        <p id="services-subtitle">Review and accept service requests from applicants targeting your university.</p>
+      </div>
+
+      <div class="tabs" id="service-tabs">
+        <button class="tab active" onclick="switchTab('offers')">Available Requests</button>
+        <button class="tab" onclick="switchTab('accepted')">Accepted Requests</button>
+      </div>
+
+      <div id="tab-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/requests.js?v=4"></script>
+</body>
+</html>

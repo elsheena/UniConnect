@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="auth-page">
+    <div class="auth-card wide">
+      <h1>Create Your Account</h1>
+      <p class="subtitle">Join the verified ecosystem for foreign students in Russia</p>
+
+      <div class="role-selector" id="role-selector">
+        <div class="role-option" data-role="student" id="role-student-btn">
+          <div class="role-emoji"><span data-icon="logo" data-size="48"></span></div>
+          <h3>Student</h3>
+          <p>I'm currently studying in Russia</p>
+        </div>
+        <div class="role-option" data-role="applicant" id="role-applicant-btn">
+          <div class="role-emoji"><span data-icon="applicant" data-size="48"></span></div>
+          <h3>Applicant</h3>
+          <p>I want to study in Russia</p>
+        </div>
+      </div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required>
+            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')"><span data-icon="eye" data-size="16"></span></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="+7-XXX-XXX-XXXX">
+        </div>
+
+        <div class="form-group">
+          <label for="nationality">Nationality</label>
+          <select id="nationality"><option value="">Select your country...</option></select>
+        </div>
+
+        <div id="student-fields" style="display:none;">
+          <div class="form-group">
+            <label for="university">University</label>
+            <select id="university"><option value="">Select your university...</option></select>
+          </div>
+        </div>
+
+        <input type="hidden" id="selected-role" value="">
+        <button type="submit" class="btn btn-primary btn-full" id="register-btn" disabled>
+          Select a role to continue
+        </button>
+      </form>
+
+      <!-- Step 2: Document Upload (Required) -->
+      <form id="upload-form" style="display:none; text-align:center;">
+        <div class="empty-state" style="padding: 20px;">
+          <div class="empty-icon"><span data-icon="document"></span></div>
+          <h3 id="upload-title">Step 2: Verify Your Identity</h3>
+          <p id="upload-subtitle">Please upload your ID or Passport to continue.</p>
+        </div>
+        
+        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px;">
+          <!-- ID Document (For everyone) -->
+          <label class="btn btn-secondary btn-full" style="cursor:pointer;" id="label-id">
+            <span data-icon="paperclip"></span> Upload ID / Passport
+            <input type="file" id="id-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
+          </label>
+
+          <!-- Student Document (For students only) -->
+          <label class="btn btn-secondary btn-full" style="cursor:pointer; display:none;" id="label-student">
+            <span data-icon="paperclip"></span> Upload Student Card
+            <input type="file" id="student-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
+          </label>
+
+          <!-- Profile Picture (For everyone) -->
+          <label class="btn btn-secondary btn-full" style="cursor:pointer;" id="label-avatar">
+            <span data-icon="user"></span> Upload Profile Picture
+            <input type="file" id="avatar-file" accept="image/*" style="display:none;">
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="upload-submit-btn">Upload & Complete</button>
+      </form>
+
+      <div class="auth-footer" id="auth-footer">
+        Already have an account? <a href="/login">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/register.js?v=4"></script>
+</body>
+</html>

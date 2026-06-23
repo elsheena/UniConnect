@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Data — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content" style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 500px; height: 500px; top: -150px; right: -100px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.05; width: 400px; height: 400px; bottom: 50px; left: -100px;"></div>
+    
+    <div class="container" style="position:relative; z-index:1; max-width: 800px;">
+      <div class="page-header">
+        <h1><span data-icon="plus"></span> Add System Data</h1>
+        <p>Introduce new Universities, Programs, Chat Groups, or Service Types to the ecosystem.</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('uni')"><span data-icon="building"></span> University</button>
+        <button class="tab" onclick="switchTab('prog')"><span data-icon="document"></span> Program</button>
+        <button class="tab" onclick="switchTab('grp')"><span data-icon="globe"></span> Chat Group</button>
+        <button class="tab" onclick="switchTab('srv')"><span data-icon="list"></span> Service Type</button>
+        <button class="tab" onclick="switchTab('ev')"><span data-icon="calendar"></span> Event</button>
+      </div>
+
+      <div id="add-data-content" style="margin-top: 24px;">
+        
+        <!-- Form: Add University -->
+        <div id="form-uni" class="tab-content-pane active">
+          <div class="card">
+            <h3>Add a New University</h3>
+            <form id="add-uni-form" onsubmit="handleAddUniversity(event)" style="margin-top: 15px;">
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>University Name</label>
+                <input type="text" id="uni-name" placeholder="e.g. Saint Petersburg State University" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>City</label>
+                <input type="text" id="uni-city" placeholder="e.g. Saint Petersburg" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Description</label>
+                <textarea id="uni-desc" placeholder="Provide a brief description..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit; height:80px;" required></textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>University Logo (PNG/JPG)</label>
+                <input type="file" id="uni-logo-file" accept="image/*" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;">
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Building Picture (PNG/JPG)</label>
+                <input type="file" id="uni-image-file" accept="image/*" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;">
+              </div>
+              <button type="submit" id="uni-submit-btn" class="btn btn-success">Add University</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Form: Add Program -->
+        <div id="form-prog" class="tab-content-pane" style="display:none;">
+          <div class="card">
+            <h3>Add an Academic Program</h3>
+            <form id="add-program-form" onsubmit="handleAddProgram(event)" style="margin-top: 15px;">
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Select University</label>
+                <select id="prog-uni-id" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+                  <option value="">-- Loading Universities... --</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Program Code</label>
+                <input type="text" id="prog-code" placeholder="e.g. 09.03.04" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Program Name</label>
+                <input type="text" id="prog-name" placeholder="e.g. Software Engineering" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Cost per Year (RUB)</label>
+                <input type="number" id="prog-cost" placeholder="e.g. 300000" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Duration</label>
+                <input type="text" id="prog-duration" value="4 years" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Degree Level</label>
+                <input type="text" id="prog-level" value="Bachelor" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Language of Instruction</label>
+                <input type="text" id="prog-lang" value="Russian" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Description</label>
+                <textarea id="prog-desc" placeholder="Provide a brief description..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit; height:80px;" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-success">Add Program</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Form: Add Chat Group -->
+        <div id="form-grp" class="tab-content-pane" style="display:none;">
+          <div class="card">
+            <h3>Add a Chat Group</h3>
+            <form id="add-group-form" onsubmit="handleAddGroup(event)" style="margin-top: 15px;">
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Group Name</label>
+                <input type="text" id="grp-name" placeholder="e.g. Spanish Students Community" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Flag / Icon Name</label>
+                <input type="text" id="grp-flag" value="globe" placeholder="e.g. globe, flag, building, heart" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Description</label>
+                <textarea id="grp-desc" placeholder="Provide a brief description..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit; height:80px;" required></textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Is Country Group?</label>
+                <select id="grp-is-country" onchange="toggleGroupFields()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="form-group" id="grp-country-code-container" style="margin-bottom: 15px;">
+                <label>Country Code (e.g. ES, EG, CN, ALL)</label>
+                <input type="text" id="grp-country-code" placeholder="e.g. ES" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;">
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Is University Group?</label>
+                <select id="grp-is-uni" onchange="toggleGroupFields()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="form-group" id="grp-uni-container" style="margin-bottom: 15px; display:none;">
+                <label>Linked University</label>
+                <select id="grp-uni-id" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;">
+                  <option value="">-- Choose University --</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-success">Add Group</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Form: Add Service Type -->
+        <div id="form-srv" class="tab-content-pane" style="display:none;">
+          <div class="card">
+            <h3>Add a Service Type</h3>
+            <form id="add-service-form" onsubmit="handleAddService(event)" style="margin-top: 15px;">
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Service ID (unique string)</label>
+                <input type="text" id="srv-id" placeholder="e.g. visa_assistance" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Service Name</label>
+                <input type="text" id="srv-name" placeholder="e.g. Visa Extension Help" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Icon Name</label>
+                <input type="text" id="srv-icon" value="document" placeholder="e.g. document, chat, clipboard, creditcard" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Price (USD)</label>
+                <input type="number" id="srv-price" placeholder="e.g. 15" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Requires City Selection?</label>
+                <select id="srv-has-city" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Requires University Selection?</label>
+                <select id="srv-has-uni" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>First Session Free?</label>
+                <select id="srv-first-free" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Description</label>
+                <textarea id="srv-desc" placeholder="Provide a brief description..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit; height:80px;" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-success">Add Service Type</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Form: Add Event -->
+        <div id="form-ev" class="tab-content-pane" style="display:none;">
+          <div class="card">
+            <h3>Post a New Event</h3>
+            <form id="add-event-form" onsubmit="handleAddEvent(event)" style="margin-top: 15px;">
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Event Title</label>
+                <input type="text" id="ev-title" placeholder="e.g. Saint Petersburg Welcome Fest" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Date</label>
+                <input type="date" id="ev-date" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Location</label>
+                <input type="text" id="ev-location" placeholder="e.g. Palace Square, Saint Petersburg" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Category</label>
+                <input type="text" id="ev-category" placeholder="e.g. Culture, Seminar, Festival" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;">
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>External Link (Optional)</label>
+                <input type="url" id="ev-link" placeholder="e.g. https://example.com/event-details" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;">
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Description</label>
+                <textarea id="ev-desc" placeholder="Describe the event..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit; height:80px;"></textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label>Event Banner / Picture (PNG/JPG)</label>
+                <input type="file" id="ev-image-file" accept="image/*" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); font-family:inherit;">
+              </div>
+              <button type="submit" id="ev-submit-btn" class="btn btn-success">Post Event</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/add-data.js?v=4"></script>
+</body>
+</html>

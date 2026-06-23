@@ -1,7 +1,7 @@
 async function loadOpportunities() {
   const user = await checkAuth();
   if (!user) return window.location.href = '/login';
-  if (user.role !== 'student' && user.role !== 'admin') {
+  if (user.role !== 'student' && user.role !== 'moderator' && user.role !== 'admin') {
     window.location.href = '/profile';
     return;
   }

@@ -33,13 +33,13 @@ class WalletPage extends BasePage {
   }
 
   async onInit() {
-    if (this.user.role !== 'student' && this.user.role !== 'applicant') {
+    if (this.user.role !== 'student' && this.user.role !== 'moderator' && this.user.role !== 'applicant') {
       window.location.href = '/profile.html';
       return;
     }
 
     const redeemCard = document.getElementById('redeem-card');
-    if (redeemCard && this.user.role !== 'student') {
+    if (redeemCard && this.user.role !== 'student' && this.user.role !== 'moderator') {
       redeemCard.style.display = 'none';
     }
 

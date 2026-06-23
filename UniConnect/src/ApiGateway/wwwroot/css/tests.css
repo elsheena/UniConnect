@@ -223,3 +223,12 @@
     max-width: none;
   }
 }
+
+.tests-timeline-card {
+  margin-top: 20px;
+}
+
+.btn-clear-term {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}

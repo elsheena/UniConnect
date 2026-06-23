@@ -81,3 +81,213 @@
 .mini-info h4 { font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
 .mini-info p { font-size: 0.72rem; color: var(--text-muted); }
 
+.btn-profile-edit {
+  margin-left: auto;
+}
+
+.status-badge-wrapper {
+  margin-top: 8px;
+}
+
+.profile-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.detail-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.student-pending-box {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-pending-title {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  display: block;
+}
+
+.student-pending-status {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-purple);
+}
+
+.student-btn-wrapper {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.profile-page-content {
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-container {
+  max-width: 800px;
+  position: relative;
+  z-index: 1;
+}
+
+.unverified-notice-shield {
+  flex-shrink: 0;
+}
+
+.unverified-notice-body {
+  flex: 1;
+}
+
+.unverified-notice-title {
+  color: var(--text-primary);
+}
+
+.unverified-notice-upload {
+  flex-shrink: 0;
+}
+
+.profile-card {
+  margin-bottom: 24px;
+}
+
+.modal-upload-area {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.flex-align-center-gap-12 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-cursor-pointer {
+  cursor: pointer;
+}
+
+.small-muted-block {
+  display: block;
+  margin-top: 4px;
+}
+
+.student-modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+}
+
+.student-university-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.student-upload-area {
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+.student-card-file-label {
+  cursor: pointer;
+  position: relative;
+}
+
+.student-card-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.modal-actions-mt-20 {
+  margin-top: 20px;
+}
+
+.verify-orb-style-1 {
+  opacity: 0.1;
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  right: -100px;
+}
+
+.verify-orb-style-2 {
+  opacity: 0.05;
+  width: 320px;
+  height: 320px;
+  bottom: 100px;
+  left: -100px;
+}
+
+.required-asterisk {
+  color: var(--accent-red);
+}
+
+.read-only-input {
+  background: var(--bg-body);
+  cursor: not-allowed;
+}
+
+.profile-group-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.profile-group-row-icon {
+  font-size: 1.4rem;
+}
+
+.profile-group-row-name {
+  font-weight: 600;
+}
+
+.profile-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.activity-icon-box {
+  background: var(--bg-input);
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--accent-blue);
+}
+
+.activity-info-box {
+  flex: 1;
+}
+
+.activity-service-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.activity-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
