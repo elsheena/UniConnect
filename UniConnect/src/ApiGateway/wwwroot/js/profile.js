@@ -1,3 +1,5 @@
+// Profile Page Controller for UniConnect
+
 async function loadProfile() {
   const user = await checkAuth();
   if (!user) return window.location.href = '/login';
@@ -9,57 +11,130 @@ async function loadProfile() {
     if (!user.isVerified && user.verificationStatus !== 'pending' && user.avatarStatus !== 'pending') {
       banner.style.display = 'flex';
       const shieldIcon = document.getElementById('profile-shield-icon');
-      if (shieldIcon) shieldIcon.innerHTML = getIcon('shield', 20);
+      if (shieldIcon && window.getIcon) shieldIcon.innerHTML = getIcon('shield', 20);
     } else {
       banner.style.display = 'none';
     }
   }
 
   // Profile header
-  const avatarHtml = user.avatarUrl && user.avatarStatus === 'approved'
-    ? `<img src="${user.avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">`
-    : `<span>${user.fullName.charAt(0)}</span>`;
-  
   const statusClass = user.avatarStatus === 'approved' ? 'verified' : user.avatarStatus === 'pending' ? 'pending' : 'unverified';
-
-  let roleMsg = '';
-  if (user.role === 'student') {
-    if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
-      roleMsg = `<span data-icon="logo"></span> Verified Student (Pending Transfer)`;
-    } else {
-      roleMsg = user.isGraduated ? '<span data-icon="shield"></span> Graduated Student' : `<span data-icon="logo"></span> ${user.isVerified ? 'Verified' : 'Unverified'} Student at ${user.universityName || 'University'}`;
-    }
-  } else if (user.role === 'representative') {
-    roleMsg = `<span data-icon="building"></span> Official Representative of ${user.universityName || 'University'}`;
-  } else if (user.role === 'applicant') {
-    if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
-      roleMsg = '<span data-icon="applicant"></span> Applicant (Pending Student Verification)';
-    } else {
-      roleMsg = '<span data-icon="applicant"></span> Applicant';
-    }
-  } else {
-    roleMsg = '<span data-icon="shield"></span> Administrator';
-  }
-
-  const statusBadgeStr = (user.role === 'applicant' && user.verificationStatus === 'pending' && user.pendingUniversityId)
-    ? '<span class="badge badge-pending">Pending Student Verification</span>'
-    : (user.role === 'student' && user.verificationStatus === 'pending' && user.pendingUniversityId)
-      ? '<span class="badge badge-pending">Pending Transfer Verification</span>'
-      : user.isVerified
-        ? '<span class="badge badge-verified">Verified Account</span>'
-        : user.avatarStatus === 'pending' || user.verificationStatus === 'pending'
-          ? '<span class="badge badge-pending">Pending Verification</span>'
-          : '<span class="badge badge-gray">Not Verified</span>';
 
   try {
     const headerTemplate = await fetchTemplate('/templates/profile/profile-header.html');
     document.getElementById('profile-header').innerHTML = renderTemplate(headerTemplate, {
       statusClass,
-      avatarHtml,
-      firstName: user.fullName.split(' ')[0],
-      roleMsg,
-      statusBadge: statusBadgeStr
+      firstName: user.fullName.split(' ')[0]
     });
+
+    // Populate avatar programmatically (no HTML in JS)
+    const avatarInner = document.getElementById('profile-avatar-inner');
+    if (avatarInner) {
+      avatarInner.innerHTML = '';
+      if (user.avatarUrl && user.avatarStatus === 'approved') {
+        const avatarImg = document.createElement('img');
+        avatarImg.src = user.avatarUrl;
+        avatarImg.alt = 'Avatar';
+        avatarImg.style.width = '100%';
+        avatarImg.style.height = '100%';
+        avatarImg.style.objectFit = 'cover';
+        avatarInner.appendChild(avatarImg);
+      } else {
+        const avatarSpan = document.createElement('span');
+        avatarSpan.textContent = user.fullName.charAt(0);
+        avatarInner.appendChild(avatarSpan);
+      }
+    }
+
+    // Populate role message programmatically
+    const roleDescEl = document.getElementById('role-desc-full');
+    if (roleDescEl) {
+      roleDescEl.innerHTML = '';
+      let iconName = '';
+      let roleTextStr = '';
+      const isGraduated = (user.role === 'student' || user.role === 'moderator') && user.graduationDate && new Date(user.graduationDate) < new Date();
+
+      if (user.role === 'student' || user.role === 'moderator') {
+        if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
+          iconName = 'logo';
+          roleTextStr = user.role === 'moderator' ? 'Verified Moderator (Pending Transfer)' : 'Verified Student (Pending Transfer)';
+        } else {
+          iconName = isGraduated ? 'award' : (user.role === 'moderator' ? 'shield' : 'logo');
+          roleTextStr = isGraduated 
+            ? (user.role === 'moderator' ? 'Graduated Moderator' : 'Graduated Student') 
+            : `${user.isVerified ? 'Verified' : 'Unverified'} ${user.role === 'moderator' ? 'Moderator' : 'Student'} at ${user.universityName || 'University'}`;
+        }
+      } else if (user.role === 'representative') {
+        iconName = 'building';
+        roleTextStr = `Official Representative of ${user.universityName || 'University'}`;
+      } else if (user.role === 'applicant') {
+        if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
+          iconName = 'applicant';
+          roleTextStr = 'Applicant (Pending Student Verification)';
+        } else {
+          iconName = 'applicant';
+          roleTextStr = 'Applicant';
+        }
+      } else {
+        iconName = 'shield';
+        roleTextStr = 'Administrator';
+      }
+
+      const iconSpan = document.createElement('span');
+      iconSpan.setAttribute('data-icon', iconName);
+      roleDescEl.appendChild(iconSpan);
+      roleDescEl.appendChild(document.createTextNode(` ${roleTextStr}`));
+    }
+
+    // Populate status badge programmatically
+    const badgeContainer = document.querySelector('.status-badge-wrapper');
+    if (badgeContainer) {
+      badgeContainer.innerHTML = '';
+      const badgeSpan = document.createElement('span');
+      let badgeClass = 'badge-gray';
+      let badgeText = 'Not Verified';
+      const isGraduated = (user.role === 'student' || user.role === 'moderator') && user.graduationDate && new Date(user.graduationDate) < new Date();
+
+      if (user.role === 'applicant' && user.verificationStatus === 'pending' && user.pendingUniversityId) {
+        badgeClass = 'badge-pending';
+        badgeText = 'Pending Student Verification';
+      } else if ((user.role === 'student' || user.role === 'moderator') && user.verificationStatus === 'pending' && user.pendingUniversityId) {
+        badgeClass = 'badge-pending';
+        badgeText = 'Pending Transfer Verification';
+      } else if (user.isVerified) {
+        badgeClass = 'badge-verified';
+        badgeText = 'Verified Account';
+      } else if (user.avatarStatus === 'pending' || user.verificationStatus === 'pending') {
+        badgeClass = 'badge-pending';
+        badgeText = 'Pending Verification';
+      }
+
+      badgeSpan.className = `badge ${badgeClass}`;
+      badgeSpan.textContent = badgeText;
+      badgeContainer.appendChild(badgeSpan);
+
+      if (isGraduated) {
+        const gradSpan = document.createElement('span');
+        gradSpan.className = 'badge badge-green';
+        gradSpan.style.display = 'inline-flex';
+        gradSpan.style.alignItems = 'center';
+        gradSpan.style.gap = '4px';
+        gradSpan.style.marginLeft = '8px';
+        
+        const iconSpan = document.createElement('span');
+        iconSpan.setAttribute('data-icon', 'award');
+        gradSpan.appendChild(iconSpan);
+        gradSpan.appendChild(document.createTextNode(' Graduated'));
+        badgeContainer.appendChild(gradSpan);
+      }
+    }
+
+    // Bind edit profile button event listener
+    const editBtn = document.getElementById('edit-profile-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', openEditModal);
+    }
+
   } catch (e) {
     console.error('Error rendering profile header', e);
   }
@@ -68,98 +143,139 @@ async function loadProfile() {
   const verSection = document.getElementById('verification-section');
   const dashData = await API.getDashboardStats().catch(() => ({}));
   
-  let cardsHtml = '';
-  if (user.role === 'representative') {
-    const stats = await API.getStats().catch(() => ({}));
-    cardsHtml = `
-      <div class="stat-cards">
-        <div class="stat-card clickable" onclick="window.location.href='/admin'"><div class="stat-icon"><span data-icon="document"></span></div><div class="stat-value">${stats.pendingDocs || 0}</div><div class="stat-label">Pending Documents</div></div>
-        <div class="stat-card"><div class="stat-icon"><span data-icon="chat"></span></div><div class="stat-value">${dashData.activeBookings || 0}</div><div class="stat-label">Active Conversations</div></div>
-        <div class="stat-card clickable" onclick="window.location.href='/requests.html'"><div class="stat-icon"><span data-icon="clock"></span></div><div class="stat-value">${dashData.openCalls || 0}</div><div class="stat-label">Pending Requests</div></div>
-        <div class="stat-card"><div class="stat-icon"><span data-icon="check"></span></div><div class="stat-value">${dashData.completedServices || 0}</div><div class="stat-label">Total Handled</div></div>
-      </div>
-    `;
-  } else if (user.role === 'student') {
-    const accepted = await API.getAcceptedServices().catch(() => ({bookings:[]}));
-    const totalEarnings = (accepted.bookings || []).filter(b => b.status === 'completed').reduce((sum, b) => sum + b.studentEarning, 0);
-    cardsHtml = `
-      <div class="stat-cards">
-        <div class="stat-card"><div class="stat-icon"><span data-icon="matryoshka"></span></div><div class="stat-value">${totalEarnings} MP</div><div class="stat-label">Total Earned</div></div>
-        <div class="stat-card"><div class="stat-icon"><span data-icon="list"></span></div><div class="stat-value">${dashData.activeBookings || 0}</div><div class="stat-label">Active Services</div></div>
-        <div class="stat-card"><div class="stat-icon"><span data-icon="check"></span></div><div class="stat-value">${dashData.completedServices || 0}</div><div class="stat-label">Completed</div></div>
-      </div>
-    `;
-  } else if (user.role === 'applicant') {
-    cardsHtml = `
-      <div class="stat-cards">
-        <div class="stat-card clickable" onclick="window.location.href='/universities'"><div class="stat-icon"><span data-icon="building"></span></div><div class="stat-value">${dashData.appliedUniversities || 0}</div><div class="stat-label">Applied Universities</div></div>
-        <div class="stat-card"><div class="stat-icon"><span data-icon="clock"></span></div><div class="stat-value">${dashData.pendingRequests || 0}</div><div class="stat-label">Pending Requests</div></div>
-        <div class="stat-card clickable" onclick="window.location.href='/wallet'"><div class="stat-icon"><span data-icon="wallet"></span></div><div class="stat-value">${dashData.balanceMP || 0} MP</div><div class="stat-label">My Balance</div></div>
-      </div>
-    `;
-  }
-
   try {
     const statsTemplate = await fetchTemplate('/templates/profile/profile-stats.html');
-    verSection.innerHTML = renderTemplate(statsTemplate, { cardsHtml });
+    verSection.innerHTML = statsTemplate;
+
+    const cardsContainer = document.getElementById('profile-stat-cards');
+    if (cardsContainer) {
+      if (user.role === 'representative') {
+        const stats = await API.getStats().catch(() => ({}));
+        const cards = [
+          { icon: 'document', value: stats.pendingDocs || 0, label: 'Pending Documents', href: '/admin' },
+          { icon: 'chat', value: dashData.activeBookings || 0, label: 'Active Conversations' },
+          { icon: 'clock', value: dashData.openCalls || 0, label: 'Pending Requests', href: '/requests.html' },
+          { icon: 'check', value: dashData.completedServices || 0, label: 'Total Handled' }
+        ];
+        renderStatCards(cardsContainer, cards);
+      } else if (user.role === 'student' || user.role === 'moderator') {
+        const accepted = await API.getAcceptedServices().catch(() => ({bookings:[]}));
+        const totalEarnings = (accepted.bookings || []).filter(b => b.status === 'completed').reduce((sum, b) => sum + b.studentEarning, 0);
+        const cards = [
+          { icon: 'matryoshka', value: `${totalEarnings} MP`, label: 'Total Earned' },
+          { icon: 'list', value: dashData.activeBookings || 0, label: 'Active Services' },
+          { icon: 'check', value: dashData.completedServices || 0, label: 'Completed' }
+        ];
+        renderStatCards(cardsContainer, cards);
+      } else if (user.role === 'applicant') {
+        const cards = [
+          { icon: 'building', value: dashData.appliedUniversities || 0, label: 'Applied Universities', href: '/universities.html' },
+          { icon: 'clock', value: dashData.pendingRequests || 0, label: 'Pending Requests' },
+          { icon: 'wallet', value: `${dashData.balanceMP || 0} MP`, label: 'My Balance', href: '/wallet.html' }
+        ];
+        renderStatCards(cardsContainer, cards);
+      }
+    }
   } catch (e) {
     console.error('Error rendering profile stats', e);
   }
 
   // Information display
   const isStaffOrApp = user.role === 'admin' || user.role === 'representative' || user.role === 'applicant';
-  const nationalityHtml = user.role !== 'admin' && user.role !== 'representative' ? `<div><span style="font-size:0.82rem;color:var(--text-muted);">Nationality</span><br><strong>${user.nationality || 'N/A'}</strong></div>` : '';
-  const universityHtml = user.universityName ? `<div><span style="font-size:0.82rem;color:var(--text-muted);">University</span><br><strong>${user.universityName}</strong></div>` : '';
-
-  let studentActionHtml = '';
-  if (user.role === 'applicant') {
-    if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
-      studentActionHtml = `
-      <div style="margin-top:20px; padding:15px; border-radius:12px; background:var(--bg-input); border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; display:block;">Student Verification</span>
-          <span style="font-size:0.9rem; font-weight:700; color:var(--accent-purple);">Pending student verification</span>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="cancelStudentRequest()"><span data-icon="x"></span> Cancel Request</button>
-      </div>
-      `;
-    } else if (user.isVerified) {
-      studentActionHtml = `
-      <div style="margin-top:20px; text-align:right;">
-        <button class="btn btn-primary btn-sm" onclick="openStudentModal()"><span data-icon="logo"></span> Become Student</button>
-      </div>
-      `;
-    }
-  } else if (user.role === 'student') {
-    if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
-      studentActionHtml = `
-      <div style="margin-top:20px; padding:15px; border-radius:12px; background:var(--bg-input); border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; display:block;">University Transfer</span>
-          <span style="font-size:0.9rem; font-weight:700; color:var(--accent-purple);">Transfer pending verification</span>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="cancelStudentRequest()"><span data-icon="x"></span> Cancel Request</button>
-      </div>
-      `;
-    } else {
-      studentActionHtml = `
-      <div style="margin-top:20px; text-align:right;">
-        <button class="btn btn-secondary btn-sm" onclick="openStudentModal()"><span data-icon="logo"></span> Change University</button>
-      </div>
-      `;
-    }
-  }
 
   try {
     const detailsTemplate = await fetchTemplate('/templates/profile/profile-details.html');
-    document.getElementById('profile-details').innerHTML = renderTemplate(detailsTemplate, {
-      email: user.email,
-      phone: user.phoneNumber || 'Not set',
-      nationalityHtml,
-      universityHtml,
-      memberSince: formatDate(user.createdAt).split(',')[0],
-      studentActionHtml
-    });
+    document.getElementById('profile-details').innerHTML = detailsTemplate;
+
+    // Populate email, phone, and memberSince
+    const emailEl = document.getElementById('profile-detail-email');
+    if (emailEl) emailEl.textContent = user.email;
+
+    const phoneEl = document.getElementById('profile-detail-phone');
+    if (phoneEl) phoneEl.textContent = user.phoneNumber || 'Not set';
+
+    const memberSinceEl = document.getElementById('profile-detail-membersince');
+    if (memberSinceEl) memberSinceEl.textContent = formatDate(user.createdAt).split(',')[0];
+
+    // Populate nationality
+    const nationalityContainer = document.getElementById('profile-detail-nationality-container');
+    if (nationalityContainer) {
+      nationalityContainer.innerHTML = '';
+      if (user.role !== 'admin' && user.role !== 'representative') {
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'detail-label';
+        labelSpan.textContent = 'Nationality';
+        
+        const br = document.createElement('br');
+        
+        const strongVal = document.createElement('strong');
+        strongVal.textContent = user.nationality || 'N/A';
+        
+        nationalityContainer.appendChild(labelSpan);
+        nationalityContainer.appendChild(br);
+        nationalityContainer.appendChild(strongVal);
+      }
+    }
+
+    // Populate university
+    const universityContainer = document.getElementById('profile-detail-university-container');
+    if (universityContainer) {
+      universityContainer.innerHTML = '';
+      if (user.universityName) {
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'detail-label';
+        labelSpan.textContent = 'University';
+        
+        const br = document.createElement('br');
+        
+        const strongVal = document.createElement('strong');
+        strongVal.textContent = user.universityName;
+        
+        universityContainer.appendChild(labelSpan);
+        universityContainer.appendChild(br);
+        universityContainer.appendChild(strongVal);
+      }
+    }
+
+    // Populate graduation date
+    const graduationContainer = document.getElementById('profile-detail-graduation-container');
+    if (graduationContainer) {
+      graduationContainer.innerHTML = '';
+      if ((user.role === 'student' || user.role === 'moderator') && user.graduationDate) {
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'detail-label';
+        labelSpan.textContent = 'Graduation Date';
+        
+        const br = document.createElement('br');
+        
+        const strongVal = document.createElement('strong');
+        strongVal.textContent = new Date(user.graduationDate).toLocaleDateString();
+        
+        graduationContainer.appendChild(labelSpan);
+        graduationContainer.appendChild(br);
+        graduationContainer.appendChild(strongVal);
+      }
+    }
+
+    // Populate student action
+    const studentActionContainer = document.getElementById('student-action-container');
+    if (studentActionContainer) {
+      studentActionContainer.innerHTML = '';
+      if (user.role === 'applicant') {
+        if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
+          renderPendingStudentRequest(studentActionContainer, 'Student Verification', 'Pending student verification');
+        } else if (user.isVerified) {
+          renderStudentButton(studentActionContainer, 'Become Student', 'btn-primary', openStudentModal);
+        }
+      } else if (user.role === 'student' || user.role === 'moderator') {
+        if (user.verificationStatus === 'pending' && user.pendingUniversityId) {
+          renderPendingStudentRequest(studentActionContainer, 'University Transfer', 'Transfer pending verification');
+        } else {
+          renderStudentButton(studentActionContainer, 'Change University', 'btn-secondary', openStudentModal);
+        }
+      }
+    }
+
   } catch (e) {
     console.error('Error rendering profile details', e);
   }
@@ -174,54 +290,202 @@ async function loadProfile() {
     try {
       const userData = await API.getUser(user.id);
       const groups = userData.user.groups || [];
+      groupsEl.innerHTML = '';
       if (groups.length === 0) {
-        groupsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;padding:10px 0;">Join some groups to connect with others.</p>';
+        const p = document.createElement('p');
+        p.className = 'no-groups-text';
+        p.textContent = 'Join some groups to connect with others.';
+        groupsEl.appendChild(p);
       } else {
         const groupRowTemplate = await fetchTemplate('/templates/profile/profile-group-row.html');
-        groupsEl.innerHTML = groups.map(g => {
-          return renderTemplate(groupRowTemplate, {
-            iconHtml: getIcon(g.flag || 'globe', 32),
-            name: g.name
-          });
-        }).join('');
+        for (const g of groups) {
+          const rowDiv = document.createElement('div');
+          rowDiv.innerHTML = renderTemplate(groupRowTemplate, { name: g.name });
+          const rowEl = rowDiv.firstElementChild;
+          
+          const iconContainer = rowEl.querySelector('#group-icon-container');
+          if (iconContainer && window.getIcon) {
+            iconContainer.innerHTML = getIcon(g.flag || 'globe', 32);
+          }
+          groupsEl.appendChild(rowEl);
+        }
       }
-    } catch { groupsEl.innerHTML = '<p>Unable to load groups.</p>'; }
+    } catch { 
+      groupsEl.innerHTML = '';
+      const p = document.createElement('p');
+      p.textContent = 'Unable to load groups.';
+      groupsEl.appendChild(p);
+    }
   }
 
-  // Activity Feed (Merged from Dashboard)
+  // Activity Feed
   const activityEl = document.getElementById('profile-earnings'); 
-  document.getElementById('earnings-card').querySelector('h3').innerHTML = '<span data-icon="list"></span> Recent Activity';
-  document.getElementById('earnings-card').style.display = 'block';
+  const activityCard = document.getElementById('earnings-card');
+  
+  if (activityCard) {
+    const cardHeaderTitle = activityCard.querySelector('h3');
+    if (cardHeaderTitle) {
+      cardHeaderTitle.innerHTML = '';
+      const iconSpan = document.createElement('span');
+      iconSpan.setAttribute('data-icon', 'list');
+      cardHeaderTitle.appendChild(iconSpan);
+      cardHeaderTitle.appendChild(document.createTextNode(' Recent Activity'));
+    }
+    activityCard.style.display = 'block';
+  }
 
   try {
     const bookings = await API.getMyBookings();
+    activityEl.innerHTML = '';
     if (!bookings.bookings || bookings.bookings.length === 0) {
-      activityEl.innerHTML = '<p style="color:var(--text-muted);padding:10px 0;">No recent activity found.</p>';
+      const p = document.createElement('p');
+      p.className = 'detail-label';
+      p.style.padding = '10px 0';
+      p.textContent = 'No recent activity found.';
+      activityEl.appendChild(p);
     } else {
       const activityRowTemplate = await fetchTemplate('/templates/profile/profile-activity-row.html');
-      activityEl.innerHTML = bookings.bookings.slice(0, 5).map(b => {
-        const iconHtml = getIcon(b.serviceIcon, 20);
-        const timeAgoStr = timeAgo(b.createdAt);
-        const chatButtonHtml = b.status === 'accepted' ? `<a href="/chats.html?chatId=${b.id}" class="btn btn-xs btn-secondary">Chat</a>` : '';
-        const statusBadgeHtml = statusBadge(b.status);
-
-        return renderTemplate(activityRowTemplate, {
-          iconHtml,
+      bookings.bookings.slice(0, 5).forEach(b => {
+        const rowDiv = document.createElement('div');
+        rowDiv.innerHTML = renderTemplate(activityRowTemplate, {
           serviceName: b.serviceName,
-          timeAgoStr,
-          chatButtonHtml,
-          statusBadgeHtml
+          timeAgoStr: timeAgo(b.createdAt)
         });
-      }).join('');
+        
+        const rowEl = rowDiv.firstElementChild;
+        
+        const iconContainer = rowEl.querySelector('#activity-icon-container');
+        if (iconContainer && window.getIcon) {
+          iconContainer.innerHTML = getIcon(b.serviceIcon, 20);
+        }
+        
+        const chatContainer = rowEl.querySelector('#activity-chat-container');
+        if (chatContainer && b.status === 'accepted') {
+          const chatBtn = document.createElement('a');
+          chatBtn.href = `/chats.html?chatId=${b.id}`;
+          chatBtn.className = 'btn btn-xs btn-secondary';
+          chatBtn.textContent = 'Chat';
+          chatContainer.appendChild(chatBtn);
+        }
+        
+        const statusContainer = rowEl.querySelector('#activity-status-container');
+        if (statusContainer) {
+          const colors = {
+            open: 'blue', accepted: 'orange', completed: 'green',
+            cancelled: 'red', pending: 'orange', approved: 'green', rejected: 'red'
+          };
+          const badgeColor = colors[b.status] || 'gray';
+          const badgeSpan = document.createElement('span');
+          badgeSpan.className = `badge badge-${badgeColor}`;
+          badgeSpan.textContent = b.status;
+          statusContainer.appendChild(badgeSpan);
+        }
+        
+        activityEl.appendChild(rowEl);
+      });
     }
-  } catch { activityEl.innerHTML = '<p>Unable to load activity.</p>'; }
+  } catch { 
+    activityEl.innerHTML = '';
+    const p = document.createElement('p');
+    p.textContent = 'Unable to load activity.';
+    activityEl.appendChild(p);
+  }
 
   // Final icon render
   document.querySelectorAll('.page-content [data-icon]').forEach(el => {
     const iconName = el.getAttribute('data-icon');
     const size = el.getAttribute('data-size') || 18;
-    el.innerHTML = getIcon(iconName, size);
+    if (window.getIcon) {
+      el.innerHTML = getIcon(iconName, size);
+    }
   });
+}
+
+function renderStatCards(container, cards) {
+  container.innerHTML = '';
+  cards.forEach(card => {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'stat-card';
+    if (card.href) {
+      cardEl.classList.add('clickable');
+      cardEl.addEventListener('click', () => {
+        window.location.href = card.href;
+      });
+    }
+    
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'stat-icon';
+    const iconSpan = document.createElement('span');
+    iconSpan.setAttribute('data-icon', card.icon);
+    iconDiv.appendChild(iconSpan);
+    
+    const valDiv = document.createElement('div');
+    valDiv.className = 'stat-value';
+    valDiv.textContent = card.value;
+    
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'stat-label';
+    labelDiv.textContent = card.label;
+    
+    cardEl.appendChild(iconDiv);
+    cardEl.appendChild(valDiv);
+    cardEl.appendChild(labelDiv);
+    container.appendChild(cardEl);
+  });
+}
+
+function renderPendingStudentRequest(container, titleText, statusText) {
+  container.innerHTML = '';
+  
+  const box = document.createElement('div');
+  box.className = 'student-pending-box';
+  
+  const textDiv = document.createElement('div');
+  
+  const titleSpan = document.createElement('span');
+  titleSpan.className = 'student-pending-title';
+  titleSpan.textContent = titleText;
+  
+  const statusSpan = document.createElement('span');
+  statusSpan.className = 'student-pending-status';
+  statusSpan.textContent = statusText;
+  
+  textDiv.appendChild(titleSpan);
+  textDiv.appendChild(statusSpan);
+  
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-secondary btn-sm';
+  
+  const iconSpan = document.createElement('span');
+  iconSpan.setAttribute('data-icon', 'x');
+  
+  cancelBtn.appendChild(iconSpan);
+  cancelBtn.appendChild(document.createTextNode(' Cancel Request'));
+  cancelBtn.addEventListener('click', cancelStudentRequest);
+  
+  box.appendChild(textDiv);
+  box.appendChild(cancelBtn);
+  container.appendChild(box);
+}
+
+function renderStudentButton(container, text, btnClass, clickHandler) {
+  container.innerHTML = '';
+  
+  const wrapper = document.createElement('div');
+  wrapper.className = 'student-btn-wrapper';
+  
+  const btn = document.createElement('button');
+  btn.className = `btn ${btnClass} btn-sm`;
+  
+  const iconSpan = document.createElement('span');
+  iconSpan.setAttribute('data-icon', 'logo');
+  
+  btn.appendChild(iconSpan);
+  btn.appendChild(document.createTextNode(` ${text}`));
+  btn.addEventListener('click', clickHandler);
+  
+  wrapper.appendChild(btn);
+  container.appendChild(wrapper);
 }
 
 async function uploadAvatar(file) {
@@ -271,7 +535,7 @@ async function openEditModal() {
   const upArea = document.getElementById('modal-upload-area');
   if (upArea) {
     const iconSpan = upArea.querySelector('[data-icon]');
-    if (iconSpan) iconSpan.innerHTML = getIcon('paperclip', 14);
+    if (iconSpan && window.getIcon) iconSpan.innerHTML = getIcon('paperclip', 14);
   }
   
   document.getElementById('edit-modal').classList.add('active');
@@ -310,7 +574,7 @@ async function openStudentModal() {
   const user = currentUser;
   const titleEl = document.getElementById('student-modal-title');
   const subEl = document.getElementById('student-modal-subtitle');
-  if (user.role === 'student') {
+  if (user.role === 'student' || user.role === 'moderator') {
     titleEl.textContent = 'Change University';
     subEl.textContent = 'Please select the new university you want to transfer to and upload your new student card.';
   } else {
@@ -338,7 +602,7 @@ async function openStudentModal() {
   document.getElementById('student-card-label-text').textContent = 'Choose File';
   const label = document.getElementById('student-card-file').closest('label');
   const iconSpan = label.querySelector('[data-icon]');
-  if (iconSpan) iconSpan.innerHTML = getIcon('paperclip', 14);
+  if (iconSpan && window.getIcon) iconSpan.innerHTML = getIcon('paperclip', 14);
 
   document.getElementById('student-modal').classList.add('active');
 }
@@ -352,7 +616,7 @@ function updateStudentCardLabel(input) {
     document.getElementById('student-card-label-text').textContent = input.files[0].name;
     const label = input.closest('label');
     const iconSpan = label.querySelector('[data-icon]');
-    if (iconSpan) iconSpan.innerHTML = getIcon('check', 14);
+    if (iconSpan && window.getIcon) iconSpan.innerHTML = getIcon('check', 14);
   }
 }
 
@@ -404,5 +668,38 @@ async function cancelStudentRequest() {
   }
 }
 
-loadProfile();
+// Bind dynamic event listeners on load
+document.addEventListener("DOMContentLoaded", () => {
+  // Bind forms
+  const editForm = document.getElementById('edit-form');
+  if (editForm) editForm.addEventListener('submit', saveProfile);
 
+  const studentForm = document.getElementById('student-form');
+  if (studentForm) studentForm.addEventListener('submit', submitStudentRequest);
+
+  // Bind change events
+  const editAvatarInput = document.getElementById('edit-avatar-input');
+  if (editAvatarInput) {
+    editAvatarInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        uploadAvatar(e.target.files[0]);
+      }
+    });
+  }
+
+  const studentCardFile = document.getElementById('student-card-file');
+  if (studentCardFile) {
+    studentCardFile.addEventListener('change', (e) => {
+      updateStudentCardLabel(e.target);
+    });
+  }
+
+  // Bind cancels
+  const editCancelBtn = document.getElementById('edit-cancel-btn');
+  if (editCancelBtn) editCancelBtn.addEventListener('click', closeEditModal);
+
+  const studentCancelBtn = document.getElementById('student-cancel-btn');
+  if (studentCancelBtn) studentCancelBtn.addEventListener('click', closeStudentModal);
+});
+
+loadProfile();

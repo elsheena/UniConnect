@@ -29,16 +29,32 @@ class IndexPage extends BasePage {
         const welcomeCardTemplate = await fetchTemplate('/templates/welcome-uni-card.html');
         
         container.innerHTML = sample.map(u => {
-          const linkUrl = this.user ? '/universities.html' : '/register.html';
+          const linkUrl = this.user ? `/university.html?id=${u.id}` : '/register';
           const description = u.description.substring(0, 100);
           return renderTemplate(welcomeCardTemplate, {
+            id: u.id,
+            logo: u.logo || '/img/universities/default.png',
             name: u.name,
+            city: u.city || 'Russia',
             description,
             linkUrl
           });
         }).join('');
 
         this.renderIcons(container);
+
+        // Add card click listener for navigation
+        container.addEventListener('click', (e) => {
+          // If clicked inside the anchor link button, let default anchor behavior handle it
+          if (e.target.closest('a')) return;
+          const card = e.target.closest('.university-card');
+          if (card) {
+            const link = card.querySelector('a');
+            if (link) {
+              window.location.href = link.getAttribute('href');
+            }
+          }
+        });
       }
     } catch (e) {
       console.error("Failed to load partner universities on index page:", e);

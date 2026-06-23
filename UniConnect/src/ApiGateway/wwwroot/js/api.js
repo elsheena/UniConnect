@@ -49,6 +49,7 @@ const API = {
 
   // Admin / Moderation
   moderateUser: (userId, action) => API.request('POST', `/api/admin/users/${userId}/action`, { action }),
+  reportMessage: (chatId, messageId, chatType, reason) => API.request('POST', `/api/chats/messages/${messageId}/report`, { chatId, chatType, reason }),
 
   // Messaging (Self/Admin/Mod)
   editGroupMessage: (groupId, msgId, text) => API.request('PATCH', `/api/groups/${groupId}/messages/${msgId}`, { text }),
@@ -72,15 +73,15 @@ const API = {
   getMessages: (groupId) => API.request('GET', `/api/groups/${groupId}/messages`),
   sendMessage: (groupId, text) => API.request('POST', `/api/groups/${groupId}/messages`, { text }),
 
-  // Services
-  getServiceTypes: () => API.request('GET', '/api/services'),
-  bookService: (data) => API.request('POST', '/api/services/book', data),
-  getMyBookings: () => API.request('GET', '/api/services/my-bookings'),
-  getOffers: () => API.request('GET', '/api/services/offers'),
-  acceptOffer: (id) => API.request('POST', `/api/services/${id}/accept`),
-  completeService: (id) => API.request('POST', `/api/services/${id}/complete`),
-  cancelBooking: (id) => API.request('POST', `/api/services/${id}/cancel`),
-  getAcceptedServices: () => API.request('GET', '/api/services/accepted'),
+  // Bookings / Services
+  getServiceTypes: () => API.request('GET', '/api/bookings'),
+  bookService: (data) => API.request('POST', '/api/bookings/book', data),
+  getMyBookings: () => API.request('GET', '/api/bookings/my-bookings'),
+  getOffers: () => API.request('GET', '/api/bookings/offers'),
+  acceptOffer: (id) => API.request('POST', `/api/bookings/${id}/accept`),
+  completeService: (id) => API.request('POST', `/api/bookings/${id}/complete`),
+  cancelBooking: (id) => API.request('POST', `/api/bookings/${id}/cancel`),
+  getAcceptedServices: () => API.request('GET', '/api/bookings/accepted'),
 
   // Admin
   getPendingDocs: () => API.request('GET', '/api/admin/pending-documents'),
@@ -88,6 +89,7 @@ const API = {
   getGroupRequests: () => API.request('GET', '/api/admin/group-requests'),
   verifyGroupRequest: (reqId, action) => API.request('POST', `/api/admin/group-requests/${reqId}`, { action }),
   getAllUsers: () => API.request('GET', '/api/admin/users'),
+  moderateUser: (userId, action) => API.request('POST', `/api/admin/users/${userId}/action`, { action }),
   getStats: () => API.request('GET', '/api/admin/stats'),
 
   // Private Chats
@@ -104,5 +106,5 @@ const API = {
 
   // Helpers
   getExchangeRates: (base = 'RUB') => fetch(`https://open.er-api.com/v6/latest/${base}`).then(res => res.json()),
-  getAcceptedServices: () => API.request('GET', '/api/services/offers?accepted=true') // Adjusting to use existing offers logic or new
+  getAcceptedServices: () => API.request('GET', '/api/bookings/offers?accepted=true') // Adjusting to use existing offers logic or new
 };

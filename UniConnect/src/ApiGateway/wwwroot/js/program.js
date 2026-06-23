@@ -205,7 +205,7 @@ class ProgramPage extends BasePage {
   }
 
   async applyNow() {
-    if (this.user.role !== 'applicant' && this.user.role !== 'student') {
+    if (this.user.role !== 'applicant' && this.user.role !== 'student' && this.user.role !== 'moderator') {
       return showToast('Only applicants and students can apply to programs.', 'error');
     }
 

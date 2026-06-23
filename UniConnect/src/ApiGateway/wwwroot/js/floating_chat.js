@@ -91,7 +91,7 @@ const FloatingChat = {
             const privateData = await API.getChats().catch(() => ({ chats: [] }));
             let joinedGroups = [];
             const user = (typeof currentUser !== 'undefined' ? currentUser : null) || window.currentUser;
-            if (user && (user.role === 'student' || user.role === 'admin')) {
+            if (user && (user.role === 'student' || user.role === 'moderator' || user.role === 'admin')) {
                 const groupsData = await API.getGroups().catch(() => ({ groups: [] }));
                 joinedGroups = (groupsData.groups || []).filter(g => g.isMember);
             }
@@ -144,7 +144,7 @@ const FloatingChat = {
                 }
 
                 return `
-                    <div class="chat-item" onclick="FloatingChat.selectConversation(${item.id}, ${item.isGroup}, '${item.name.replace(/'/g, "\\'")}')" style="display:flex;align-items:center;gap:10px;padding:8px;cursor:pointer;border-radius:8px;border-bottom:1px solid var(--border-subtle);transition:background 0.2s;">
+                    <div class="chat-item" onclick="FloatingChat.selectConversation('${item.id}', ${item.isGroup}, '${item.name.replace(/'/g, "\\'")}')" style="display:flex;align-items:center;gap:10px;padding:8px;cursor:pointer;border-radius:8px;border-bottom:1px solid var(--border-subtle);transition:background 0.2s;">
                         ${avatarHtml}
                         <div style="flex:1;overflow:hidden;">
                             <div style="font-weight:700;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
