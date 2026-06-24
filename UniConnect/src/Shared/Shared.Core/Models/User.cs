@@ -65,5 +65,14 @@ namespace Core.Models
 
         [Column("pending_university_id")]
         public Guid? PendingUniversityId { get; set; }
+
+        [Column("is_muted")]
+        public bool IsMuted { get; set; } = false;
+
+        [Column("is_banned")]
+        public bool IsBanned { get; set; } = false;
+
+        [Column("graduation_date")]
+        public DateTime? GraduationDate { get; set; }
     }
 }
