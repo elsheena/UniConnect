@@ -79,6 +79,12 @@ namespace Auth.API.Controllers
                 return Unauthorized(new { error = "User not found." });
             }
 
+            if (user.IsBanned)
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return Unauthorized(new { error = "Your account has been banned." });
+            }
+
             return Ok(new { user });
         }
 

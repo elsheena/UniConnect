@@ -96,6 +96,11 @@ namespace Auth.BLL.Services
                 return (false, "Invalid email or password.", null);
             }
 
+            if (user.IsBanned)
+            {
+                return (false, "Your account has been banned.", null);
+            }
+
             var userDto = MapToUserDto(user);
             return (true, string.Empty, userDto);
         }
@@ -124,7 +129,10 @@ namespace Auth.BLL.Services
                 user.BalanceUSD,
                 user.BalanceMP,
                 user.VerificationStatus.ToString().ToLower(),
-                user.IsVerified
+                user.IsVerified,
+                user.IsMuted,
+                user.IsBanned,
+                user.GraduationDate
             );
         }
     }
