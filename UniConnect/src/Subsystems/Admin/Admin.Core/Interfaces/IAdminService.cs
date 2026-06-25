@@ -19,5 +19,8 @@ namespace Admin.Core.Interfaces
         Task<(bool Success, string Error, object? ServiceType)> AddServiceTypeAsync(AddServiceTypeDto dto);
         Task<(bool Success, string Error)> DeductUserMPAsync(Guid userId, DeductMPDto dto);
         Task<(bool Success, string Error)> AddUserMPAsync(Guid userId, AddMPDto dto);
+        Task<(bool Success, string Error)> ModerateUserAsync(Guid userId, string action);
+        Task<(bool Success, string Error, object? Reports)> GetPendingReportsAsync();
+        Task<(bool Success, string Error)> ResolveReportAsync(Guid reportId, string action);
     }
 }

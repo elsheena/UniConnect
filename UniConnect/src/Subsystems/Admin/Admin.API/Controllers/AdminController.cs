@@ -9,7 +9,7 @@ using Admin.Core.Interfaces;
 namespace Admin.API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin,representative,moderator")]
     [Route("api/[controller]")]
     public class AdminController : ControllerBase
     {
@@ -51,6 +51,7 @@ namespace Admin.API.Controllers
         }
 
         // GET /api/admin/group-requests
+        [Authorize(Roles = "admin")]
         [HttpGet("group-requests")]
         public async Task<IActionResult> GetGroupRequests()
         {
@@ -61,6 +62,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/group-requests/{id}
+        [Authorize(Roles = "admin")]
         [HttpPost("group-requests/{id}")]
         public async Task<IActionResult> VerifyGroupRequest(Guid id, [FromBody] VerifyGroupRequestDto dto)
         {
@@ -75,6 +77,7 @@ namespace Admin.API.Controllers
         }
 
         // GET /api/admin/users
+        [Authorize(Roles = "admin")]
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -84,7 +87,48 @@ namespace Admin.API.Controllers
             return Ok(new { users = result.Users });
         }
 
+        // POST /api/admin/users/{userId}/action
+        [Authorize(Roles = "admin,moderator")]
+        [HttpPost("users/{userId}/action")]
+        public async Task<IActionResult> ModerateUser(Guid userId, [FromBody] ModerateUserDto dto)
+        {
+            var userRole = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+            var isPromoteOrDemote = dto.Action.ToLower().Trim() == "promote" || dto.Action.ToLower().Trim() == "demote";
+            if (isPromoteOrDemote && userRole != "admin")
+            {
+                return StatusCode(403, new { error = "Only administrators can modify user roles." });
+            }
+
+            var result = await _adminService.ModerateUserAsync(userId, dto.Action);
+            if (!result.Success) return BadRequest(new { error = result.Error });
+
+            return Ok(new { message = $"User moderated successfully with action: {dto.Action}" });
+        }
+
+        // GET /api/admin/reports
+        [Authorize(Roles = "admin,representative,moderator")]
+        [HttpGet("reports")]
+        public async Task<IActionResult> GetPendingReports()
+        {
+            var result = await _adminService.GetPendingReportsAsync();
+            if (!result.Success) return BadRequest(new { error = result.Error });
+
+            return Ok(new { reports = result.Reports });
+        }
+
+        // POST /api/admin/reports/{reportId}/action
+        [Authorize(Roles = "admin,representative,moderator")]
+        [HttpPost("reports/{reportId}/action")]
+        public async Task<IActionResult> ResolveReport(Guid reportId, [FromBody] ResolveReportDto dto)
+        {
+            var result = await _adminService.ResolveReportAsync(reportId, dto.Action);
+            if (!result.Success) return BadRequest(new { error = result.Error });
+
+            return Ok(new { message = $"Report resolved with action: {dto.Action}" });
+        }
+
         // GET /api/admin/stats
+        [Authorize(Roles = "admin")]
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {
@@ -95,6 +139,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/universities
+        [Authorize(Roles = "admin")]
         [HttpPost("universities")]
         public async Task<IActionResult> AddUniversity([FromBody] AddUniversityDto dto)
         {
@@ -104,6 +149,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/universities/{universityId}/programs
+        [Authorize(Roles = "admin")]
         [HttpPost("universities/{universityId}/programs")]
         public async Task<IActionResult> AddProgram(Guid universityId, [FromBody] AddProgramDto dto)
         {
@@ -113,6 +159,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/groups
+        [Authorize(Roles = "admin")]
         [HttpPost("groups")]
         public async Task<IActionResult> AddGroup([FromBody] AddGroupDto dto)
         {
@@ -122,6 +169,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/countries
+        [Authorize(Roles = "admin")]
         [HttpPost("countries")]
         public async Task<IActionResult> AddCountry([FromBody] AddCountryDto dto)
         {
@@ -131,6 +179,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/services
+        [Authorize(Roles = "admin")]
         [HttpPost("services")]
         public async Task<IActionResult> AddServiceType([FromBody] AddServiceTypeDto dto)
         {
@@ -140,6 +189,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/users/{userId}/deduct-mp
+        [Authorize(Roles = "admin")]
         [HttpPost("users/{userId}/deduct-mp")]
         public async Task<IActionResult> DeductMP(Guid userId, [FromBody] DeductMPDto dto)
         {
@@ -149,6 +199,7 @@ namespace Admin.API.Controllers
         }
 
         // POST /api/admin/users/{userId}/add-mp
+        [Authorize(Roles = "admin")]
         [HttpPost("users/{userId}/add-mp")]
         public async Task<IActionResult> AddMP(Guid userId, [FromBody] AddMPDto dto)
         {

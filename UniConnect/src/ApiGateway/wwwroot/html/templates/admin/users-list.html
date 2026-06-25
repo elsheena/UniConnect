@@ -1,0 +1,55 @@
+<div class="users-tab-container">
+  <!-- Filters Row -->
+  <div class="users-filters-row" style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; background:var(--bg-card); border:1px solid var(--border-subtle); padding:16px; border-radius:12px;">
+    <div class="form-group" style="flex:2; min-width:200px; margin-bottom:0;">
+      <input type="text" id="user-search-input" placeholder="Search by name or email..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary);">
+    </div>
+    
+    <div class="form-group" style="flex:1; min-width:120px; margin-bottom:0;">
+      <select id="user-role-filter" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); cursor:pointer;">
+        <option value="">All Roles</option>
+        <option value="student">Student</option>
+        <option value="applicant">Applicant</option>
+        <option value="representative">Representative</option>
+        <option value="admin">Admin</option>
+        <option value="moderator">Moderator</option>
+        <option value="muted">Muted</option>
+      </select>
+    </div>
+    
+    <div class="form-group" style="flex:1.5; min-width:150px; margin-bottom:0;">
+      <select id="user-uni-filter" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); cursor:pointer;">
+        <option value="">All Universities</option>
+      </select>
+    </div>
+    
+    <div class="form-group" style="flex:1; min-width:120px; margin-bottom:0;">
+      <select id="user-verified-filter" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); cursor:pointer;">
+        <option value="">All Verification</option>
+        <option value="yes">Verified Only</option>
+        <option value="no">Unverified Only</option>
+      </select>
+    </div>
+
+    <div class="form-group" style="flex:1; min-width:120px; margin-bottom:0;">
+      <select id="user-page-size" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-input); color:var(--text-primary); cursor:pointer;">
+        <option value="10">Show 10</option>
+        <option value="24" selected>Show 24</option>
+        <option value="50">Show 50</option>
+        <option value="100">Show 100</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Big block listing users (grid of cards) -->
+  <div id="users-cards-grid" class="users-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:20px; margin-bottom:20px;">
+    <!-- Cards will be populated here -->
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-container" style="display:flex; justify-content:center; align-items:center; gap:10px; margin-top:20px; margin-bottom:20px;">
+    <button class="btn btn-secondary btn-sm" id="btn-prev-page">Prev</button>
+    <span id="pagination-info" style="font-size:0.9rem; color:var(--text-secondary);">Page 1 of 1</span>
+    <button class="btn btn-secondary btn-sm" id="btn-next-page">Next</button>
+  </div>
+</div>
