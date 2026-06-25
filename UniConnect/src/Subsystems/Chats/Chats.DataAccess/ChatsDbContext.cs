@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Core.Models;
+using Core.Enums.Booking;
 using Core.Enums.Group;
 using Shared.DataAccess.Data;
 using System;
@@ -45,6 +46,14 @@ namespace Chats.DataAccess
             modelBuilder.Entity<Membership>(entity =>
             {
                 entity.HasIndex(m => new { m.UserId, m.GroupId }).IsUnique();
+            });
+
+            modelBuilder.Entity<Booking>(entity =>
+            {
+                entity.Property(b => b.Status).HasConversion(
+                    v => v.ToString().ToLower(),
+                    v => (BookingStatus)Enum.Parse(typeof(BookingStatus), v, true)
+                );
             });
         }
     }

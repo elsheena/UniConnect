@@ -13,7 +13,7 @@ using Core.Enums.Group;
 namespace Chats.API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin,moderator")]
     [Route("api/admin/chats")]
     public class AdminChatsController : ControllerBase
     {

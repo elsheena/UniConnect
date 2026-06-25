@@ -154,7 +154,7 @@ namespace Chats.BLL.Services
             }
 
             var dbUser = await _db.Users.FindAsync(userId);
-            if (dbUser != null && dbUser.Role == UserRole.Muted)
+            if (dbUser != null && (dbUser.Role == UserRole.Muted || dbUser.IsMuted))
             {
                 return (false, "You are currently muted and cannot send messages.", null);
             }
@@ -300,6 +300,56 @@ namespace Chats.BLL.Services
             await _db.SaveChangesAsync();
 
             return (true, string.Empty, user.BalanceMP);
+        }
+
+        public async Task<(bool Success, string Error)> ReportMessageAsync(Guid messageId, Guid reporterId, string reporterName, Guid chatId, string chatType, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                return (false, "Reason is required to report a message.");
+            }
+
+            string messageText = string.Empty;
+            Guid senderId = Guid.Empty;
+            string senderName = string.Empty;
+
+            if (chatType.Equals("group", StringComparison.OrdinalIgnoreCase))
+            {
+                var msg = await _db.GroupMessages.FindAsync(messageId);
+                if (msg == null) return (false, "Group message not found.");
+                messageText = msg.Text;
+                senderId = msg.SenderId;
+                senderName = msg.SenderName;
+            }
+            else
+            {
+                var msg = await _db.PrivateMessages.FindAsync(messageId);
+                if (msg == null) return (false, "Private message not found.");
+                messageText = msg.Text;
+                senderId = msg.SenderId;
+                senderName = msg.SenderName;
+            }
+
+            var report = new ReportedMessage
+            {
+                Id = Guid.NewGuid(),
+                MessageId = messageId,
+                ChatId = chatId,
+                ChatType = chatType.ToLower().Trim(),
+                ReporterId = reporterId,
+                ReporterName = reporterName,
+                SenderId = senderId,
+                SenderName = senderName,
+                MessageText = messageText,
+                Reason = reason.Trim(),
+                ReportedAt = DateTime.UtcNow,
+                Status = "pending"
+            };
+
+            _db.ReportedMessages.Add(report);
+            await _db.SaveChangesAsync();
+
+            return (true, string.Empty);
         }
     }
 }
