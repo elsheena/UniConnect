@@ -1,6 +1,66 @@
 {
   "Routes": [
     {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3001
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth-swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3002
+        }
+      ],
+      "UpstreamPathTemplate": "/api/chats-swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3003
+        }
+      ],
+      "UpstreamPathTemplate": "/api/files-swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3004
+        }
+      ],
+      "UpstreamPathTemplate": "/api/bookings-swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3005
+        }
+      ],
+      "UpstreamPathTemplate": "/api/admin-swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -61,6 +121,18 @@
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
+      "DownstreamPathTemplate": "/api/chats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3002
+        }
+      ],
+      "UpstreamPathTemplate": "/api/chats",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
+    },
+    {
       "DownstreamPathTemplate": "/api/chats/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -70,6 +142,18 @@
         }
       ],
       "UpstreamPathTemplate": "/api/chats/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/groups",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3002
+        }
+      ],
+      "UpstreamPathTemplate": "/api/groups",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
     },
     {
@@ -97,7 +181,7 @@
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
-      "DownstreamPathTemplate": "/api/services/{everything}",
+      "DownstreamPathTemplate": "/api/bookings/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -105,7 +189,7 @@
           "Port": 3004
         }
       ],
-      "UpstreamPathTemplate": "/api/services/{everything}",
+      "UpstreamPathTemplate": "/api/bookings/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
     },
     {
@@ -190,6 +274,18 @@
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/events",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 3005
+        }
+      ],
+      "UpstreamPathTemplate": "/api/events",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
     },
     {
