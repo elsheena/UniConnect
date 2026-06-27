@@ -6,6 +6,8 @@ namespace Admin.Core.DTOs
     // Moderation/Admin DTOs
     public record ModerateUserDto(string Action);
 
+    public record ResolveReportDto(string Action);
+
     public record VerifyDocumentDto(string Action, string? Note, DateTime? GraduationDate);
 
     public record VerifyGroupRequestDto(string Action);
@@ -66,4 +68,14 @@ namespace Admin.Core.DTOs
     );
 
     public record UpdateVerificationStatusDto(string Action, Guid? UniversityId);
+
+    public record AddEventDto(
+        string Title,
+        string Date,
+        string Location,
+        string? Image,
+        string? Description,
+        string? Link,
+        string? Category
+    );
 }

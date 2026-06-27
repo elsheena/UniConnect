@@ -30,6 +30,9 @@ namespace Auth.Core.DTOs
         int BalanceMP,
         string VerificationStatus,
         bool IsVerified,
+        bool IsMuted = false,
+        bool IsBanned = false,
+        DateTime? GraduationDate = null,
         string LocalCurrency = "USD"
     );
 

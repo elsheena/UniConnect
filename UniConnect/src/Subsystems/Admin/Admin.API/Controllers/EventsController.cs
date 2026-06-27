@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Admin.Core.Interfaces;
+using Admin.Core.DTOs;
 
 namespace Admin.API.Controllers
 {
@@ -28,6 +29,19 @@ namespace Admin.API.Controllers
                 return StatusCode(500, new { error = "Server error." });
             }
             return Ok(new { events = result.Events });
+        }
+
+        // POST /api/events
+        [HttpPost]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> AddEvent([FromBody] AddEventDto dto)
+        {
+            var result = await _eventService.AddEventAsync(dto);
+            if (!result.Success)
+            {
+                return BadRequest(new { error = result.Error });
+            }
+            return Ok(new { success = true, @event = result.Event });
         }
     }
 }

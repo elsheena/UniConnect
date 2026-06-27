@@ -35,7 +35,7 @@ namespace Chats.BLL.Services
             var visibleGroups = groups.Where(g =>
             {
                 if (g.GroupType != GroupType.University) return true;
-                if ((currentUser.Role == UserRole.Student || currentUser.Role == UserRole.Representative) && g.UniversityId == currentUser.UniversityId) return true;
+                if ((currentUser.Role == UserRole.Student || currentUser.Role == UserRole.Representative || currentUser.Role == UserRole.Moderator) && g.UniversityId == currentUser.UniversityId) return true;
                 if (currentUser.Role == UserRole.Admin) return true;
                 return false;
             }).ToList();
@@ -46,6 +46,7 @@ namespace Chats.BLL.Services
             foreach (var g in visibleGroups)
             {
                 var memberCount = await _db.Memberships.CountAsync(m => m.GroupId == g.Id);
+                var isMember = await _db.Memberships.AnyAsync(m => m.GroupId == g.Id && m.UserId == userId);
                 string? avatarUrl = null;
                 if (g.GroupType == GroupType.University && g.UniversityId.HasValue)
                 {
@@ -65,7 +66,8 @@ namespace Chats.BLL.Services
                     isUniversityGroup = (g.GroupType == GroupType.University),
                     g.UniversityId,
                     memberCount,
-                    avatarUrl
+                    avatarUrl,
+                    isMember
                 });
             }
 
@@ -88,7 +90,10 @@ namespace Chats.BLL.Services
                     m.User.FullName,
                     m.User.Nationality,
                     m.User.UniversityName,
-                    isRepresentative = m.User.Role == UserRole.Representative
+                    isRepresentative = m.User.Role == UserRole.Representative,
+                    role = m.User.Role.ToString().ToLower(),
+                    isMuted = m.User.IsMuted,
+                    isBanned = m.User.IsBanned
                 })
                 .ToListAsync();
 
@@ -146,7 +151,7 @@ namespace Chats.BLL.Services
             bool isAutoApprove = false;
             if (group.GroupType == GroupType.University)
             {
-                if ((currentUser.Role == UserRole.Student || currentUser.Role == UserRole.Representative) && currentUser.UniversityId == group.UniversityId)
+                if ((currentUser.Role == UserRole.Student || currentUser.Role == UserRole.Representative || currentUser.Role == UserRole.Moderator) && currentUser.UniversityId == group.UniversityId)
                 {
                     isAutoApprove = true;
                 }
@@ -229,6 +234,7 @@ namespace Chats.BLL.Services
 
             var msgs = await _db.GroupMessages
                 .Where(m => m.GroupId == groupId)
+                .Include(m => m.Sender)
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
@@ -253,7 +259,7 @@ namespace Chats.BLL.Services
             var user = await _db.Users.FindAsync(userId);
             if (user == null) return (false, "User not found.", null);
 
-            if (user.Role == UserRole.Muted)
+            if (user.Role == UserRole.Muted || user.IsMuted)
             {
                 return (false, "You are currently muted and cannot send messages.", null);
             }

@@ -8,6 +8,7 @@ namespace Core.Enums.User
         Representative,
         Student,
         Applicant,
-        Muted
+        Muted,
+        Moderator
     }
 }

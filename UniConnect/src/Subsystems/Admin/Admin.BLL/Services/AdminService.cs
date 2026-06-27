@@ -27,29 +27,32 @@ namespace Admin.BLL.Services
 
         public async Task<(bool Success, string Error, object? Documents)> GetPendingDocumentsAsync()
         {
-            var docs = await _db.Documents
+            var rawDocs = await _db.Documents
                 .Where(d => d.Status == DocumentStatus.Pending)
                 .Include(d => d.User)
-                .Select(d => new
-                {
-                    d.Id,
-                    d.UserId,
-                    d.Filename,
-                    d.OriginalName,
-                    d.UploadedAt,
-                    d.Status,
-                    d.Type,
-                    userEmail = d.User != null ? d.User.Email : "Unknown",
-                    userFullName = d.User != null ? d.User.FullName : "Unknown",
-                    userRole = d.User != null ? d.User.Role.ToString().ToLower() : "Unknown",
-                    hasVerifiedId = d.User != null && _db.Documents.Any(doc => doc.UserId == d.UserId && doc.Type == DocumentType.PassportId && doc.Status == DocumentStatus.Approved),
-                    verifiedIdFilename = d.User != null 
-                        ? _db.Documents.Where(doc => doc.UserId == d.UserId && doc.Type == DocumentType.PassportId && doc.Status == DocumentStatus.Approved)
-                                       .Select(doc => doc.Filename)
-                                       .FirstOrDefault()
-                        : null
-                })
                 .ToListAsync();
+
+            var docs = rawDocs.Select(d => new
+            {
+                d.Id,
+                d.UserId,
+                d.Filename,
+                d.OriginalName,
+                d.UploadedAt,
+                status = d.Status.ToString().ToLower(),
+                type = d.Type == DocumentType.PassportId ? "passport_id" :
+                       d.Type == DocumentType.StudentCard ? "student_card" :
+                       d.Type == DocumentType.ProfilePicture ? "profile_picture" : "unknown",
+                userEmail = d.User != null ? d.User.Email : "Unknown",
+                userFullName = d.User != null ? d.User.FullName : "Unknown",
+                userRole = d.User != null ? d.User.Role.ToString().ToLower() : "Unknown",
+                hasVerifiedId = d.User != null && _db.Documents.Any(doc => doc.UserId == d.UserId && doc.Type == DocumentType.PassportId && doc.Status == DocumentStatus.Approved),
+                verifiedIdFilename = d.User != null 
+                    ? _db.Documents.Where(doc => doc.UserId == d.UserId && doc.Type == DocumentType.PassportId && doc.Status == DocumentStatus.Approved)
+                                   .Select(doc => doc.Filename)
+                                   .FirstOrDefault()
+                    : null
+            }).ToList();
 
             return (true, string.Empty, docs);
         }
@@ -92,6 +95,10 @@ namespace Admin.BLL.Services
                     if (doc.Type == DocumentType.ProfilePicture)
                     {
                         user.AvatarStatus = DocumentStatus.Approved;
+                    }
+                    if (doc.Type == DocumentType.StudentCard && dto.GraduationDate.HasValue)
+                    {
+                        user.GraduationDate = dto.GraduationDate.Value;
                     }
                 }
                 else
@@ -222,7 +229,8 @@ namespace Admin.BLL.Services
                     u.Nationality,
                     u.UniversityName,
                     u.IsVerified,
-                    u.CreatedAt
+                    u.CreatedAt,
+                    graduationDate = u.GraduationDate
                 })
                 .ToListAsync();
 
@@ -600,6 +608,115 @@ namespace Admin.BLL.Services
                     }
                 }
             }
+        }
+
+        public async Task<(bool Success, string Error)> ModerateUserAsync(Guid userId, string action)
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return (false, "User not found.");
+            }
+
+            if (user.Role == UserRole.Admin)
+            {
+                return (false, "Cannot moderate an administrator account.");
+            }
+
+            switch (action.ToLower().Trim())
+            {
+                case "mute":
+                    user.IsMuted = true;
+                    break;
+                case "unmute":
+                    user.IsMuted = false;
+                    break;
+                case "ban":
+                    user.IsBanned = true;
+                    break;
+                case "unban":
+                    user.IsBanned = false;
+                    break;
+                case "promote":
+                    if (user.Role != UserRole.Student)
+                    {
+                        return (false, "Only students can be promoted to moderators.");
+                    }
+                    user.Role = UserRole.Moderator;
+                    break;
+                case "demote":
+                    user.Role = UserRole.Student; // default demoted role
+                    break;
+                default:
+                    return (false, $"Unknown action: {action}");
+            }
+
+            await _db.SaveChangesAsync();
+            return (true, string.Empty);
+        }
+
+        public async Task<(bool Success, string Error, object? Reports)> GetPendingReportsAsync()
+        {
+            var reports = await _db.ReportedMessages
+                .Where(r => r.Status == "pending")
+                .OrderByDescending(r => r.ReportedAt)
+                .ToListAsync();
+
+            return (true, string.Empty, reports);
+        }
+
+        public async Task<(bool Success, string Error)> ResolveReportAsync(Guid reportId, string action)
+        {
+            var report = await _db.ReportedMessages.FindAsync(reportId);
+            if (report == null)
+            {
+                return (false, "Report not found.");
+            }
+
+            if (report.Status != "pending")
+            {
+                return (false, "Report has already been resolved.");
+            }
+
+            action = action.ToLower().Trim();
+
+            if (action == "dismiss")
+            {
+                report.Status = "dismissed";
+            }
+            else if (action == "delete_message")
+            {
+                if (report.ChatType == "group")
+                {
+                    var msg = await _db.GroupMessages.FindAsync(report.MessageId);
+                    if (msg != null) msg.IsDeleted = true;
+                }
+                else
+                {
+                    var msg = await _db.PrivateMessages.FindAsync(report.MessageId);
+                    if (msg != null) msg.IsDeleted = true;
+                }
+                report.Status = "resolved_deleted";
+            }
+            else if (action == "mute_sender")
+            {
+                var sender = await _db.Users.FindAsync(report.SenderId);
+                if (sender != null) sender.IsMuted = true;
+                report.Status = "resolved_muted";
+            }
+            else if (action == "ban_sender")
+            {
+                var sender = await _db.Users.FindAsync(report.SenderId);
+                if (sender != null) sender.IsBanned = true;
+                report.Status = "resolved_banned";
+            }
+            else
+            {
+                return (false, $"Invalid report resolution action: {action}");
+            }
+
+            await _db.SaveChangesAsync();
+            return (true, string.Empty);
         }
     }
 }

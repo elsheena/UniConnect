@@ -1,0 +1,37 @@
+<div class="report-card">
+  <div class="report-header">
+    <div>
+      <span class="badge badge-red">{{chatType}} report</span>
+      <span class="report-date">{{dateStr}}</span>
+    </div>
+    <div class="report-meta">
+      Reported by: <strong>{{reporterName}}</strong>
+    </div>
+  </div>
+  
+  <div class="report-reason">
+    <strong>Reason:</strong> {{reason}}
+  </div>
+
+  <div class="report-message-text">
+    <div class="report-message-header">
+      Message from <strong>{{senderName}}</strong>:
+    </div>
+    "{{messageText}}"
+  </div>
+
+  <div class="report-actions">
+    <button class="btn btn-sm btn-secondary btn-dismiss-report" data-id="{{id}}">
+      <span data-icon="check"></span> Dismiss
+    </button>
+    <button class="btn btn-sm btn-danger btn-delete-message" data-id="{{id}}">
+      <span data-icon="trash"></span> Delete Message
+    </button>
+    <button class="btn btn-sm btn-secondary btn-mute-sender btn-mute-custom" data-id="{{id}}">
+      <span data-icon="volume-x"></span> Mute Sender
+    </button>
+    <button class="btn btn-sm btn-secondary btn-ban-sender btn-ban-custom" data-id="{{id}}">
+      <span data-icon="shield"></span> Ban Sender
+    </button>
+  </div>
+</div>
