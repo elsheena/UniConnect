@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -35,13 +35,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Files.BLL", "src\Subsystems
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Files.API", "src\Subsystems\Files\Files.API\Files.API.csproj", "{CBB3D846-9477-4F47-A97E-B9D2AC0A78A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services.Core", "src\Subsystems\Services\Services.Core\Services.Core.csproj", "{4BDF928E-B4E6-400C-9B1B-1577DDA82F10}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookings.Core", "src\Subsystems\Bookings\Bookings.Core\Bookings.Core.csproj", "{4BDF928E-B4E6-400C-9B1B-1577DDA82F10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services.DataAccess", "src\Subsystems\Services\Services.DataAccess\Services.DataAccess.csproj", "{E598C032-B5F4-465A-80C4-3F55D98A2C50}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookings.DataAccess", "src\Subsystems\Bookings\Bookings.DataAccess\Bookings.DataAccess.csproj", "{E598C032-B5F4-465A-80C4-3F55D98A2C50}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services.BLL", "src\Subsystems\Services\Services.BLL\Services.BLL.csproj", "{74C84BE5-E223-4159-A74A-FC376E75616B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookings.BLL", "src\Subsystems\Bookings\Bookings.BLL\Bookings.BLL.csproj", "{74C84BE5-E223-4159-A74A-FC376E75616B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services.API", "src\Subsystems\Services\Services.API\Services.API.csproj", "{066E4D93-26B8-4561-8171-4A60E484D071}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookings.API", "src\Subsystems\Bookings\Bookings.API\Bookings.API.csproj", "{066E4D93-26B8-4561-8171-4A60E484D071}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Admin.Core", "src\Subsystems\Admin\Admin.Core\Admin.Core.csproj", "{8C0347ED-419F-4F57-B052-A00B51899954}"
 EndProject
