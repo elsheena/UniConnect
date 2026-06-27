@@ -6,9 +6,9 @@
     <ProjectReference Include="..\..\src\Subsystems\Admin\Admin.Core\Admin.Core.csproj" />
     <ProjectReference Include="..\..\src\Subsystems\Admin\Admin.DataAccess\Admin.DataAccess.csproj" />
     <ProjectReference Include="..\..\src\Subsystems\Admin\Admin.BLL\Admin.BLL.csproj" />
-    <ProjectReference Include="..\..\src\Subsystems\Services\Services.Core\Services.Core.csproj" />
-    <ProjectReference Include="..\..\src\Subsystems\Services\Services.DataAccess\Services.DataAccess.csproj" />
-    <ProjectReference Include="..\..\src\Subsystems\Services\Services.BLL\Services.BLL.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Bookings\Bookings.Core\Bookings.Core.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Bookings\Bookings.DataAccess\Bookings.DataAccess.csproj" />
+    <ProjectReference Include="..\..\src\Subsystems\Bookings\Bookings.BLL\Bookings.BLL.csproj" />
   </ItemGroup>
 
   <ItemGroup>

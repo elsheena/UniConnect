@@ -12,6 +12,7 @@ The architecture is implemented in C# .NET 8.0, showcasing a highly modular, dec
 * **Gateway Routing**: Ocelot API Gateway (Port 3000)
 * **Object-Relational Mapping (ORM)**: Entity Framework Core (EF Core)
 * **Database Engine**: PostgreSQL
+* **Containerization**: Docker & Docker Compose
 * **Security & Session Management**: ASP.NET Core Data Protection API with shared cryptographic keys (`uniconnect-keys`) across isolated microservices
 * **Real-time Log Delivery**: Server-Sent Events (SSE) streaming API for integration test monitoring
 
@@ -22,9 +23,11 @@ The architecture is implemented in C# .NET 8.0, showcasing a highly modular, dec
 The solution is organized into isolated assemblies to ensure strict boundaries. The directory structure is organized as follows:
 
 ```
-E:\FREERIDE\Documents\Thesis\UniConnect
+UniConnect/
 │   UniConnect.sln                 # Central .NET Solution File
 │   run_all.ps1                    # PowerShell Ecosystem Startup Script
+│   Dockerfile                     # Multi-stage .NET Build Container
+│   docker-compose.yml             # Full-stack Orchestration Manifest
 ├───src
 │   ├───ApiGateway                 # Central Entrypoint & Ocelot Reverse Proxy
 │   ├───NotificationWorker         # Asynchronous Background Mail Daemon
@@ -34,9 +37,9 @@ E:\FREERIDE\Documents\Thesis\UniConnect
 │   └───Subsystems                 # Segregated Subsystem Projects
 │       ├───Admin                  # Admin & Moderation Subsystem (Port 3005)
 │       ├───Auth                   # Profile & Authentication Subsystem (Port 3001)
+│       ├───Bookings               # University & Peer Booking Subsystem (Port 3004)
 │       ├───Chats                  # Private & Community Communication Subsystem (Port 3002)
-│       ├───Files                  # Document Storage & BLOB Mapping Subsystem (Port 3003)
-│       └───Services               # University & Peer Booking Subsystem (Port 3004)
+│       └───Files                  # Document Storage & BLOB Mapping Subsystem (Port 3003)
 └───tests
     └───IntegrationTests           # End-to-End Suite for Business Logics
 ```
@@ -69,19 +72,69 @@ To guarantee eventual consistency without distributed locks:
 The `EmailService` inside the Admin subsystem implements the Strategy pattern to handle email sending. The service dynamically resolves and delegates email dispatching to different concrete providers (`SmtpEmailSender`, `MailtrapEmailSender`, `FileEmailSender`, or `FailoverEmailSender`) based on the environment configuration, providing automatic fallback.
 
 ### 6. Bounded Session Propagation
-Microservices share user authentication state statelessy. By using the ASP.NET Core Data Protection API, a temporary session cookie issued by the Auth subsystem is decrypted and verified by Ocelot and adjacent APIs using shared cryptographic keys located in a temporary directory (`uniconnect-keys`).
+Microservices share user authentication state statelessly. By using the ASP.NET Core Data Protection API, a temporary session cookie issued by the Auth subsystem is decrypted and verified by Ocelot and adjacent APIs using shared cryptographic keys located in a temporary directory (`uniconnect-keys`).
 
 ---
 
 ## System Configuration & Launch
 
-### Prerequisites
+### Docker Deployment (Recommended)
+
+The entire platform can be containerized and launched using Docker Compose. This is the recommended approach for consistent, reproducible deployments.
+
+#### Prerequisites
+* **Docker Desktop** (or Docker Engine + Docker Compose)
+
+#### Quick Start
+```bash
+cd UniConnect
+docker-compose up --build
+```
+
+This command will:
+1. Build multi-stage container images for each microservice using the shared `Dockerfile`
+2. Launch a PostgreSQL 16 database container with automatic health checks
+3. Start all subsystem APIs, the notification worker, and the API Gateway
+4. Wire up internal container networking via a dedicated bridge network
+
+Once all services are running, open your browser and navigate to:
+```
+http://localhost:3000
+```
+
+#### Stopping the Platform
+```bash
+docker-compose down          # Stop all containers
+docker-compose down -v       # Stop and remove database volume
+```
+
+#### Service Ports (Docker)
+
+| Service | Container Name | Port |
+|---------|---------------|------|
+| API Gateway | uniconnect-gateway | 3000 |
+| Auth API | uniconnect-auth | 3001 |
+| Chats API | uniconnect-chats | 3002 |
+| Files API | uniconnect-files | 3003 |
+| Bookings API | uniconnect-bookings | 3004 |
+| Admin API | uniconnect-admin | 3005 |
+| PostgreSQL | uniconnect-db | 5432 |
+| Notification Worker | uniconnect-notifications | — |
+
+---
+
+### Local Development
+
+For local development without Docker, you can run each microservice natively.
+
+#### Prerequisites
 * **PostgreSQL Engine**: Ensure a PostgreSQL instance is running on `localhost` with a database named `uniconnect` and username/password credentials.
 * **.NET 8.0 SDK**: Required for compiling and running the assemblies.
 
-### Startup Execution
+#### Startup Execution
 The ecosystem can be launched concurrently using the provided PowerShell script at the project root:
 ```powershell
+cd UniConnect
 .\run_all.ps1
 ```
 This script boots up the downstream subsystems, initializes background tasks, waits for port readiness, and launches the central `ApiGateway` on port `3000`.
@@ -100,13 +153,13 @@ UniConnect includes an end-to-end integration test runner to validate system wor
 ### CLI Execution
 Navigate to the test suite directory and run the project:
 ```bash
-cd tests/IntegrationTests
+cd UniConnect/tests/IntegrationTests
 dotnet run
 ```
 
 ### Browser Execution
 The test suite can be run and monitored visually from the browser. 
-1. Run the system via `.\run_all.ps1`.
+1. Run the system via Docker Compose or `.\run_all.ps1`.
 2. Visit `http://localhost:3000/tests` in the web browser.
 3. Click **Run System Tests** to trigger execution, watch real-time console streaming, and view step-by-step progress tracking.
 
