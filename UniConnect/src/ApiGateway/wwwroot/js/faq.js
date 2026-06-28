@@ -6,6 +6,17 @@ if (window.SVG_ICONS && !window.SVG_ICONS['chevron-down']) {
 async function init() {
   const user = await checkAuth();
   Sidebar.render(user, 'faq');
+
+  // Bind search input oninput event
+  const searchInput = document.getElementById('faq-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', filterFAQs);
+  }
+
+  // Bind accordion click events dynamically
+  document.querySelectorAll('.faq-header').forEach(header => {
+    header.addEventListener('click', () => toggleFAQ(header));
+  });
 }
 
 function toggleFAQ(element) {

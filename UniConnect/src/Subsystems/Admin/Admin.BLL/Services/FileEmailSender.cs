@@ -25,12 +25,12 @@ namespace Admin.BLL.Services
             var baseDir = AppContext.BaseDirectory;
             var pathCandidates = new[]
             {
-                Path.Combine(baseDir, "..", "..", "..", "..", "ApiGateway", "wwwroot", "sent_emails"),
-                Path.Combine(baseDir, "..", "..", "ApiGateway", "wwwroot", "sent_emails"),
-                Path.Combine(baseDir, "..", "ApiGateway", "wwwroot", "sent_emails"),
-                Path.Combine(baseDir, "wwwroot", "sent_emails"),
-                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "sent_emails"),
-                Path.Combine(Directory.GetCurrentDirectory(), "..", "ApiGateway", "wwwroot", "sent_emails")
+                Path.Combine(baseDir, "..", "..", "..", "..", "ApiGateway", "wwwroot", "html", "sent_emails"),
+                Path.Combine(baseDir, "..", "..", "ApiGateway", "wwwroot", "html", "sent_emails"),
+                Path.Combine(baseDir, "..", "ApiGateway", "wwwroot", "html", "sent_emails"),
+                Path.Combine(baseDir, "wwwroot", "html", "sent_emails"),
+                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "html", "sent_emails"),
+                Path.Combine(Directory.GetCurrentDirectory(), "..", "ApiGateway", "wwwroot", "html", "sent_emails")
             };
 
             string targetDir = string.Empty;

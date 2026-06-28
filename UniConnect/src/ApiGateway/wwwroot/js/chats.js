@@ -1,3 +1,10 @@
+function getIconNode(name, size = 14) {
+  const svgText = getIcon(name, size);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgText, 'image/svg+xml');
+  return doc.documentElement;
+}
+
 class ChatItemComponent {
   constructor(item, isActive, onClick) {
     this.item = item;
@@ -68,61 +75,110 @@ class ChatItemComponent {
 }
 
 class MemberItemComponent {
-  constructor(member) {
+  constructor(member, isModOrAdmin = false, currentUserId = null) {
     this.member = member;
+    this.isModOrAdmin = isModOrAdmin;
+    this.currentUserId = currentUserId;
   }
 
   render() {
     const root = document.createElement('div');
     root.className = 'member-item';
-    root.style.display = 'flex';
-    root.style.alignItems = 'center';
-    root.style.gap = '10px';
-    root.style.padding = '8px 0';
-    root.style.borderBottom = '1px solid var(--border-subtle)';
+
+    const leftContainer = document.createElement('div');
+    leftContainer.className = 'member-item-left';
 
     const avatar = document.createElement('div');
     avatar.className = 'member-avatar';
-    avatar.style.width = '28px';
-    avatar.style.height = '28px';
-    avatar.style.borderRadius = '50%';
-    avatar.style.background = 'var(--gradient-primary)';
-    avatar.style.display = 'flex';
-    avatar.style.alignItems = 'center';
-    avatar.style.justifyContent = 'center';
-    avatar.style.fontWeight = '700';
-    avatar.style.fontSize = '0.75rem';
-    avatar.style.flexShrink = '0';
-    avatar.style.color = 'white';
     avatar.textContent = this.member.fullName.charAt(0);
 
     const info = document.createElement('div');
     info.className = 'member-info';
-    info.style.overflow = 'hidden';
 
     const name = document.createElement('div');
     name.className = 'member-name';
-    name.style.fontSize = '0.8rem';
-    name.style.fontWeight = '600';
-    name.style.whiteSpace = 'nowrap';
-    name.style.overflow = 'hidden';
-    name.style.textOverflow = 'ellipsis';
     name.textContent = this.member.fullName;
+
+    if (this.member.role === 'admin' || this.member.role === 'moderator') {
+      const roleSpan = document.createElement('span');
+      roleSpan.className = `badge badge-${this.member.role === 'admin' ? 'red' : 'purple'} member-status-badge`;
+      roleSpan.textContent = this.member.role.toUpperCase();
+      name.appendChild(roleSpan);
+    }
+    if (this.member.isMuted) {
+      const muteSpan = document.createElement('span');
+      muteSpan.className = 'badge badge-gray member-status-badge';
+      muteSpan.textContent = 'MUTED';
+      name.appendChild(muteSpan);
+    }
+    if (this.member.isBanned) {
+      const banSpan = document.createElement('span');
+      banSpan.className = 'badge badge-red member-status-badge';
+      banSpan.textContent = 'BANNED';
+      name.appendChild(banSpan);
+    }
 
     const uni = document.createElement('div');
     uni.className = 'member-uni';
-    uni.style.fontSize = '0.7rem';
-    uni.style.color = 'var(--text-muted)';
-    uni.style.whiteSpace = 'nowrap';
-    uni.style.overflow = 'hidden';
-    uni.style.textOverflow = 'ellipsis';
     uni.textContent = this.member.universityName || '';
 
     info.appendChild(name);
     info.appendChild(uni);
 
-    root.appendChild(avatar);
-    root.appendChild(info);
+    leftContainer.appendChild(avatar);
+    leftContainer.appendChild(info);
+    root.appendChild(leftContainer);
+
+    if (this.isModOrAdmin && this.member.id !== this.currentUserId && this.member.role !== 'admin') {
+      const actions = document.createElement('div');
+      actions.className = 'member-actions';
+
+      const muteBtn = document.createElement('button');
+      muteBtn.className = 'btn btn-icon btn-sm member-action-btn';
+      muteBtn.style.color = this.member.isMuted ? 'var(--accent-green)' : 'var(--text-muted)';
+      muteBtn.title = this.member.isMuted ? 'Unmute User' : 'Mute User';
+      muteBtn.appendChild(getIconNode(this.member.isMuted ? 'volume-2' : 'volume-x', 14));
+      muteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const nextAction = this.member.isMuted ? 'unmute' : 'mute';
+        if (confirm(`Are you sure you want to ${nextAction} ${this.member.fullName}?`)) {
+          try {
+            await API.moderateUser(this.member.id, nextAction);
+            showToast(`User ${nextAction}d successfully!`);
+            if (window.currentPageInstance && window.currentPageInstance.refreshMessages) {
+              window.currentPageInstance.refreshMessages();
+            }
+          } catch (err) {
+            showToast(err.error || 'Action failed.', 'error');
+          }
+        }
+      });
+      actions.appendChild(muteBtn);
+
+      const banBtn = document.createElement('button');
+      banBtn.className = 'btn btn-icon btn-sm member-action-btn';
+      banBtn.style.color = this.member.isBanned ? 'var(--accent-green)' : 'var(--accent-red)';
+      banBtn.title = this.member.isBanned ? 'Unban User' : 'Ban User';
+      banBtn.appendChild(getIconNode('shield', 14));
+      banBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const nextAction = this.member.isBanned ? 'unban' : 'ban';
+        if (confirm(`Are you sure you want to ${nextAction} ${this.member.fullName}?`)) {
+          try {
+            await API.moderateUser(this.member.id, nextAction);
+            showToast(`User ${nextAction}d successfully!`);
+            if (window.currentPageInstance && window.currentPageInstance.refreshMessages) {
+              window.currentPageInstance.refreshMessages();
+            }
+          } catch (err) {
+            showToast(err.error || 'Action failed.', 'error');
+          }
+        }
+      });
+      actions.appendChild(banBtn);
+
+      root.appendChild(actions);
+    }
 
     return root;
   }
@@ -249,6 +305,7 @@ class ChatsPage extends BasePage {
   }
 
   async onInit() {
+    window.currentPageInstance = this;
     // Hide chat windows initially
     const header = document.getElementById('chat-header-area');
     const inputArea = document.getElementById('chat-input-area');
@@ -280,7 +337,7 @@ class ChatsPage extends BasePage {
       const privateData = await API.getChats().catch(() => ({ chats: [] }));
       
       let joinedGroups = [];
-      if (this.user.role === 'student' || this.user.role === 'admin') {
+      if (this.user.role === 'student' || this.user.role === 'moderator' || this.user.role === 'admin') {
         const groupsData = await API.getGroups().catch(() => ({ groups: [] }));
         joinedGroups = (groupsData.groups || []).filter(g => g.isMember);
       }
@@ -331,7 +388,7 @@ class ChatsPage extends BasePage {
       if (reqGroupId && !this.activeChatId) {
         this.selectChat(parseInt(reqGroupId), true);
       } else if (reqChatId && !this.activeChatId) {
-        this.selectChat(parseInt(reqChatId), false);
+        this.selectChat(reqChatId, false);
       } else if (reqBookingId && !this.activeChatId) {
         const target = (privateData.chats || []).find(c => c.bookingId == reqBookingId);
         if (target) this.selectChat(target.id, false);
@@ -447,6 +504,7 @@ class ChatsPage extends BasePage {
         listDiv.style.overflowY = 'auto';
         listDiv.style.paddingRight = '4px';
 
+        const isModOrAdmin = this.user.role === 'admin' || this.user.role === 'moderator';
         if (members.length === 0) {
           const noMembers = document.createElement('p');
           noMembers.style.color = 'var(--text-muted)';
@@ -455,7 +513,7 @@ class ChatsPage extends BasePage {
           listDiv.appendChild(noMembers);
         } else {
           members.forEach(m => {
-            listDiv.appendChild(new MemberItemComponent(m).render());
+            listDiv.appendChild(new MemberItemComponent(m, isModOrAdmin, this.user.id).render());
           });
         }
 
@@ -620,15 +678,33 @@ class ChatsPage extends BasePage {
     if (!isOwn) {
       const react10 = document.createElement('div');
       react10.className = 'context-menu-item';
-      react10.innerHTML = '<span data-icon="heart"></span> React (10 MP)';
+      const react10Icon = document.createElement('span');
+      react10Icon.setAttribute('data-icon', 'heart');
+      react10Icon.appendChild(getIconNode('heart', 14));
+      react10.appendChild(react10Icon);
+      react10.appendChild(document.createTextNode(' React (10 MP)'));
       react10.addEventListener('click', () => this.reactToMsg(10));
       menu.appendChild(react10);
 
       const react50 = document.createElement('div');
       react50.className = 'context-menu-item';
-      react50.innerHTML = '<span data-icon="star"></span> Super React (50 MP)';
+      const react50Icon = document.createElement('span');
+      react50Icon.setAttribute('data-icon', 'star');
+      react50Icon.appendChild(getIconNode('star', 14));
+      react50.appendChild(react50Icon);
+      react50.appendChild(document.createTextNode(' Super React (50 MP)'));
       react50.addEventListener('click', () => this.reactToMsg(50));
       menu.appendChild(react50);
+
+      const reportItem = document.createElement('div');
+      reportItem.className = 'context-menu-item danger';
+      const reportIcon = document.createElement('span');
+      reportIcon.setAttribute('data-icon', 'alert');
+      reportIcon.appendChild(getIconNode('alert', 14));
+      reportItem.appendChild(reportIcon);
+      reportItem.appendChild(document.createTextNode(' Report Message'));
+      reportItem.addEventListener('click', () => this.reportMsg());
+      menu.appendChild(reportItem);
 
       itemAdded = true;
     }
@@ -636,7 +712,11 @@ class ChatsPage extends BasePage {
     if (isOwn) {
       const editItem = document.createElement('div');
       editItem.className = 'context-menu-item';
-      editItem.innerHTML = '<span data-icon="edit"></span> Edit';
+      const editIcon = document.createElement('span');
+      editIcon.setAttribute('data-icon', 'edit');
+      editIcon.appendChild(getIconNode('edit', 14));
+      editItem.appendChild(editIcon);
+      editItem.appendChild(document.createTextNode(' Edit'));
       editItem.addEventListener('click', () => this.editMsg());
       menu.appendChild(editItem);
       itemAdded = true;
@@ -645,7 +725,11 @@ class ChatsPage extends BasePage {
     if (isOwn || isAdmin) {
       const deleteItem = document.createElement('div');
       deleteItem.className = 'context-menu-item danger';
-      deleteItem.innerHTML = '<span data-icon="trash"></span> Delete';
+      const deleteIcon = document.createElement('span');
+      deleteIcon.setAttribute('data-icon', 'trash');
+      deleteIcon.appendChild(getIconNode('trash', 14));
+      deleteItem.appendChild(deleteIcon);
+      deleteItem.appendChild(document.createTextNode(' Delete'));
       deleteItem.addEventListener('click', () => this.deleteMsg());
       menu.appendChild(deleteItem);
       itemAdded = true;
@@ -669,6 +753,18 @@ class ChatsPage extends BasePage {
       showToast('Reacted!');
       this.refreshMessages();
     } catch (e) { showToast(e.error || 'Reaction failed.', 'error'); }
+  }
+
+  async reportMsg() {
+    const reason = prompt("Enter the reason for reporting this message:");
+    if (!reason || !reason.trim()) return;
+    try {
+      const chatType = this.activeChatIsGroup ? "group" : "private";
+      await API.reportMessage(this.activeChatId, this.activeMsgId, chatType, reason.trim());
+      showToast('Message reported successfully.', 'success');
+    } catch (e) {
+      showToast(e.error || 'Failed to report message.', 'error');
+    }
   }
 
   async editMsg() {

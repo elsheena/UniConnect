@@ -49,6 +49,9 @@ namespace Auth.BLL.Services
                 isVerified = user.IsVerified,
                 verificationStatus = user.VerificationStatus.ToString().ToLower(),
                 createdAt = user.CreatedAt,
+                isMuted = user.IsMuted,
+                isBanned = user.IsBanned,
+                graduationDate = user.GraduationDate,
                 groups
             };
 
@@ -113,7 +116,10 @@ namespace Auth.BLL.Services
                 avatarUrl = user.AvatarUrl,
                 avatarStatus = user.AvatarStatus.ToString().ToLower(),
                 createdAt = user.CreatedAt,
-                isVerified = user.IsVerified
+                isVerified = user.IsVerified,
+                isMuted = user.IsMuted,
+                isBanned = user.IsBanned,
+                graduationDate = user.GraduationDate
             };
 
             return (true, string.Empty, safeUser, verificationReset);
@@ -133,8 +139,32 @@ namespace Auth.BLL.Services
             var verificationData = new
             {
                 isVerified = user.IsVerified,
-                documents = docs,
-                latestDocument = latestDoc
+                documents = docs.Select(d => new
+                {
+                    d.Id,
+                    d.UserId,
+                    d.Filename,
+                    d.OriginalName,
+                    d.UploadedAt,
+                    status = d.Status.ToString().ToLower(),
+                    type = d.Type == DocumentType.PassportId ? "passport_id" :
+                           d.Type == DocumentType.StudentCard ? "student_card" :
+                           d.Type == DocumentType.ProfilePicture ? "profile_picture" : "unknown",
+                    d.ReviewNote
+                }).ToList(),
+                latestDocument = latestDoc != null ? new
+                {
+                    latestDoc.Id,
+                    latestDoc.UserId,
+                    latestDoc.Filename,
+                    latestDoc.OriginalName,
+                    latestDoc.UploadedAt,
+                    status = latestDoc.Status.ToString().ToLower(),
+                    type = latestDoc.Type == DocumentType.PassportId ? "passport_id" :
+                           latestDoc.Type == DocumentType.StudentCard ? "student_card" :
+                           latestDoc.Type == DocumentType.ProfilePicture ? "profile_picture" : "unknown",
+                    latestDoc.ReviewNote
+                } : null
             };
 
             return (true, string.Empty, verificationData);

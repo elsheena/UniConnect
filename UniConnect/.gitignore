@@ -1,6 +1,3 @@
-# Ignore UniConnect Thesis Presentation artifacts
-/docs/presentations/
-
 # Standard .NET build and IDE outputs
 [Db]in/
 [Oo]bj/

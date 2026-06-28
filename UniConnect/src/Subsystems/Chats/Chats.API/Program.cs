@@ -26,7 +26,11 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
     });
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Configure PostgreSQL DbContext
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -47,6 +51,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return Task.CompletedTask;
         };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
     });
 
 // Register services
@@ -55,9 +64,52 @@ builder.Services.AddScoped<IGroupService, GroupService>();
 
 var app = builder.Build();
 
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Chats API v1");
+    c.RoutePrefix = "swagger";
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run("http://localhost:3002");
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ChatsDbContext>();
+    try
+    {
+        await context.Database.EnsureCreatedAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Database initialization note: " + ex.Message);
+    }
+    await context.Database.OpenConnectionAsync();
+    using (var cmd = context.Database.GetDbConnection().CreateCommand())
+    {
+        cmd.CommandText = @"
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS is_muted BOOLEAN DEFAULT FALSE;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN DEFAULT FALSE;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS graduation_date TIMESTAMP WITH TIME ZONE;
+            CREATE TABLE IF NOT EXISTS reported_messages (
+                id UUID PRIMARY KEY,
+                message_id UUID NOT NULL,
+                chat_id UUID NOT NULL,
+                chat_type VARCHAR(50) NOT NULL,
+                reporter_id UUID NOT NULL,
+                reporter_name VARCHAR(255) NOT NULL,
+                sender_id UUID NOT NULL,
+                sender_name VARCHAR(255) NOT NULL,
+                message_text TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                reported_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                status VARCHAR(50) NOT NULL
+            );";
+        await cmd.ExecuteNonQueryAsync();
+    }
+}
+
+app.Run("http://0.0.0.0:3002");

@@ -205,7 +205,7 @@ async function handleAddService(e) {
   const description = document.getElementById('srv-desc').value.trim();
 
   try {
-    const response = await fetch('/api/admin/services', {
+    const response = await fetch('/api/admin/booking-services', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, name, icon, price, hasCity, hasUniversity, firstFree, description })
@@ -217,6 +217,51 @@ async function handleAddService(e) {
     document.getElementById('add-service-form').reset();
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+async function handleAddEvent(e) {
+  e.preventDefault();
+  const title = document.getElementById('ev-title').value.trim();
+  const date = document.getElementById('ev-date').value;
+  const location = document.getElementById('ev-location').value.trim();
+  const category = document.getElementById('ev-category').value.trim() || null;
+  const link = document.getElementById('ev-link').value.trim() || null;
+  const description = document.getElementById('ev-desc').value.trim() || null;
+  const imageInput = document.getElementById('ev-image-file');
+  const btn = document.getElementById('ev-submit-btn');
+
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Uploading files...';
+
+  try {
+    let imageUrl = '/img/events/default.jpg';
+
+    if (imageInput && imageInput.files.length > 0) {
+      imageUrl = await uploadFile(imageInput);
+    }
+
+    btn.textContent = 'Saving event...';
+
+    const response = await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, date, location, category, link, description, image: imageUrl })
+    });
+    
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to post event.');
+    }
+    
+    showToast('Event posted successfully!');
+    document.getElementById('add-event-form').reset();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
   }
 }
 

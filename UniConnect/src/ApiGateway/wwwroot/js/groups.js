@@ -5,13 +5,39 @@ async function loadGroups() {
   const user = await checkAuth();
   if (!user) return window.location.href = '/login';
   if (user.role === 'applicant') {
-    document.querySelector('.page-content').innerHTML = `
-      <div class="container" style="text-align:center; padding:80px 20px;">
-        <div style="font-size:4rem; margin-bottom:20px;">${getIcon('shield', 64)}</div>
-        <h1 style="margin-bottom:12px;">Access Denied</h1>
-        <p style="color:var(--text-muted); margin-bottom:24px;">Groups are only available for verified students. Applicants do not have access to this section.</p>
-        <a href="/profile" class="btn btn-primary">Back to Profile</a>
-      </div>`;
+    const pageContent = document.querySelector('.page-content');
+    pageContent.innerHTML = '';
+    
+    const container = document.createElement('div');
+    container.className = 'container';
+    container.style.textAlign = 'center';
+    container.style.padding = '80px 20px';
+    
+    const iconDiv = document.createElement('div');
+    iconDiv.style.fontSize = '4rem';
+    iconDiv.style.marginBottom = '20px';
+    iconDiv.innerHTML = getIcon('shield', 64);
+    
+    const h1 = document.createElement('h1');
+    h1.style.marginBottom = '12px';
+    h1.textContent = 'Access Denied';
+    
+    const p = document.createElement('p');
+    p.style.color = 'var(--text-muted)';
+    p.style.marginBottom = '24px';
+    p.textContent = 'Groups are only available for verified students. Applicants do not have access to this section.';
+    
+    const backLink = document.createElement('a');
+    backLink.href = '/profile.html';
+    backLink.className = 'btn btn-primary';
+    backLink.textContent = 'Back to Profile';
+    
+    container.appendChild(iconDiv);
+    container.appendChild(h1);
+    container.appendChild(p);
+    container.appendChild(backLink);
+    pageContent.appendChild(container);
+    
     Sidebar.render(user, 'groups');
     return;
   }
@@ -24,7 +50,13 @@ async function loadGroups() {
     const recSection = document.getElementById('recommended-section');
     
     if (!data.groups || data.groups.length === 0) {
-      grid.innerHTML = '<div class="empty-state"><p>No groups available.</p></div>';
+      grid.innerHTML = '';
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-state';
+      const emptyP = document.createElement('p');
+      emptyP.textContent = 'No groups available.';
+      emptyDiv.appendChild(emptyP);
+      grid.appendChild(emptyDiv);
       return;
     }
 
@@ -73,8 +105,29 @@ async function loadGroups() {
     }
 
     grid.innerHTML = others.map(renderGroup).join('');
+
+    // Attach click event listeners programmatically to avoid inline JS in HTML
+    const attachGroupCardListeners = (parentEl) => {
+      if (!parentEl) return;
+      parentEl.querySelectorAll('.group-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const groupId = card.getAttribute('data-id');
+          openGroup(groupId);
+        });
+      });
+    };
+
+    attachGroupCardListeners(recGrid);
+    attachGroupCardListeners(grid);
+
   } catch (e) {
-    document.getElementById('groups-grid').innerHTML = '<div class="empty-state"><p>Failed to load groups.</p></div>';
+    document.getElementById('groups-grid').innerHTML = '';
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty-state';
+    const emptyP = document.createElement('p');
+    emptyP.textContent = 'Failed to load groups.';
+    emptyDiv.appendChild(emptyP);
+    document.getElementById('groups-grid').appendChild(emptyDiv);
   }
 }
 
@@ -99,18 +152,63 @@ async function openGroup(groupId) {
 
     // Actions
     const actionsEl = document.getElementById('group-actions');
+    actionsEl.innerHTML = '';
+    
     if (data.isMember || currentUser.role === 'admin') {
-      actionsEl.innerHTML = data.isMember ? 
-        `<span class="badge badge-green">✓ Member</span> <button class="btn btn-sm btn-danger" onclick="leaveGroup(${groupId})">Leave Group</button>` :
-        `<span class="badge badge-purple">Admin Read-Only</span>`;
+      if (data.isMember) {
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-green';
+        badge.textContent = '✓ Member';
+        
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'btn btn-sm btn-danger';
+        leaveBtn.style.marginLeft = '8px';
+        leaveBtn.textContent = 'Leave Group';
+        leaveBtn.addEventListener('click', () => leaveGroup(groupId));
+        
+        actionsEl.appendChild(badge);
+        actionsEl.appendChild(leaveBtn);
+      } else {
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-purple';
+        badge.textContent = 'Admin Read-Only';
+        actionsEl.appendChild(badge);
+      }
         
       document.getElementById('chat-input-area').style.display = data.isMember ? 'flex' : 'none';
       loadMessages(groupId);
+      if (chatInterval) clearInterval(chatInterval);
       chatInterval = setInterval(() => loadMessages(groupId), 5000);
     } else {
-      actionsEl.innerHTML = `<button class="btn btn-primary btn-sm" onclick="joinGroup(${groupId})">Join Group</button>`;
+      const joinBtn = document.createElement('button');
+      joinBtn.className = 'btn btn-primary btn-sm';
+      joinBtn.textContent = 'Join Group';
+      joinBtn.addEventListener('click', () => joinGroup(groupId));
+      actionsEl.appendChild(joinBtn);
+      
       document.getElementById('chat-input-area').style.display = 'none';
-      document.getElementById('chat-messages').innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="lock"></span></div><h3>Join to see messages</h3><p>You need to be an approved member to access the chat.</p></div>';
+      
+      const chatMsgs = document.getElementById('chat-messages');
+      chatMsgs.innerHTML = '';
+      const emptyState = document.createElement('div');
+      emptyState.className = 'empty-state';
+      
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'empty-icon';
+      const iconSpan = document.createElement('span');
+      iconSpan.setAttribute('data-icon', 'lock');
+      iconDiv.appendChild(iconSpan);
+      
+      const h3 = document.createElement('h3');
+      h3.textContent = 'Join to see messages';
+      
+      const p = document.createElement('p');
+      p.textContent = 'You need to be an approved member to access the chat.';
+      
+      emptyState.appendChild(iconDiv);
+      emptyState.appendChild(h3);
+      emptyState.appendChild(p);
+      chatMsgs.appendChild(emptyState);
     }
 
     // Members
@@ -118,16 +216,50 @@ async function openGroup(groupId) {
     if (data.members.length === 0) {
       membersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">No members yet.</p>';
     } else {
-      membersList.innerHTML = data.members.map(m => `
-        <div class="member-item">
-          <div class="member-avatar">${m.fullName.charAt(0)}</div>
-          <div class="member-info">
-            <div class="member-name">${m.fullName} ${m.isRepresentative ? '<span data-icon="star"></span>' : ''}</div>
-            <div class="member-uni">${m.universityName || ''}</div>
-          </div>
-        </div>
-      `).join('');
+      membersList.innerHTML = '';
+      data.members.forEach(m => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'member-item';
+        
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'member-avatar';
+        avatarDiv.textContent = m.fullName.charAt(0);
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'member-info';
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'member-name';
+        nameDiv.textContent = m.fullName + ' ';
+        if (m.isRepresentative) {
+          const starSpan = document.createElement('span');
+          starSpan.setAttribute('data-icon', 'star');
+          nameDiv.appendChild(starSpan);
+        }
+        
+        const uniDiv = document.createElement('div');
+        uniDiv.className = 'member-uni';
+        uniDiv.textContent = m.universityName || '';
+        
+        infoDiv.appendChild(nameDiv);
+        infoDiv.appendChild(uniDiv);
+        itemDiv.appendChild(avatarDiv);
+        itemDiv.appendChild(infoDiv);
+        membersList.appendChild(itemDiv);
+      });
     }
+
+    // Re-render icons for header
+    document.getElementById('group-title').querySelectorAll('[data-icon]').forEach(el => {
+      el.innerHTML = getIcon(el.getAttribute('data-icon'), 24);
+    });
+    document.getElementById('chat-header').querySelectorAll('[data-icon]').forEach(el => {
+      el.innerHTML = getIcon(el.getAttribute('data-icon'), 14);
+    });
+    membersList.querySelectorAll('[data-icon]').forEach(el => {
+      el.innerHTML = getIcon(el.getAttribute('data-icon'), 12);
+    });
+
   } catch (e) {
     showToast(e.error || 'Failed to load group.', 'error');
     showGroupsList();
@@ -189,44 +321,130 @@ async function loadMessages(groupId) {
     if (!data.messages) return;
 
     if (data.messages.length === 0) {
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon"><span data-icon="chat"></span></div><h3>No messages yet</h3><p>Start the conversation!</p></div>';
+      container.innerHTML = '';
+      const emptyState = document.createElement('div');
+      emptyState.className = 'empty-state';
+      
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'empty-icon';
+      const iconSpan = document.createElement('span');
+      iconSpan.setAttribute('data-icon', 'chat');
+      iconDiv.appendChild(iconSpan);
+      
+      const h3 = document.createElement('h3');
+      h3.textContent = 'No messages yet';
+      
+      const p = document.createElement('p');
+      p.textContent = 'Start the conversation!';
+      
+      emptyState.appendChild(iconDiv);
+      emptyState.appendChild(h3);
+      emptyState.appendChild(p);
+      container.appendChild(emptyState);
+      
+      container.querySelectorAll('[data-icon]').forEach(el => {
+        el.innerHTML = getIcon(el.getAttribute('data-icon'), 20);
+      });
       return;
     }
 
-    container.innerHTML = data.messages.map(m => {
+    container.innerHTML = '';
+    data.messages.forEach(m => {
       const isOwn = m.senderId === currentUser.id;
       const totalMP = (m.reactions || []).reduce((acc, r) => acc + (r.amount || 0), 0);
 
-      return `
-        <div class="chat-msg ${isOwn ? 'own' : ''}" oncontextmenu="handleMsgContextMenu(event, ${m.id}, ${m.senderId}, ${isOwn})">
-          ${!isOwn ? `
-            <div class="msg-avatar" onclick="window.location.href='/user-details?id=${m.senderId}'" style="display: flex; align-items: center; justify-content: center; background: var(--gradient-primary); color: white; font-weight: 700; font-size: 0.75rem; border-radius: 6px; width: 24px; height: 24px; text-transform: uppercase; overflow: hidden; flex-shrink: 0;">
-              ${m.senderAvatar 
-                ? `<img src="${m.senderAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`
-                : m.senderName.charAt(0)
-              }
-            </div>
-          ` : ''}
-          <div class="msg-bubble">
-            ${!isOwn ? `<div class="msg-sender">${m.senderName}</div>` : ''}
-            <div class="msg-text">
-              ${m.text}
-              ${m.isEdited ? '<span class="msg-status-tag">(edited)</span>' : ''}
-            </div>
-            ${totalMP > 0 ? `
-              <div class="msg-reactions">
-                <div class="reaction-badge">
-                  <img src="/img/logo_small.png" alt="MP"> ${totalMP}
-                </div>
-              </div>
-            ` : ''}
-            <div class="msg-time" style="font-size:0.65rem; opacity:0.6; margin-top:4px;">${timeAgo(m.sentAt)}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-msg ${isOwn ? 'own' : ''}`;
+      msgDiv.addEventListener('contextmenu', (e) => {
+        handleMsgContextMenu(e, m.id, m.senderId, isOwn);
+      });
+
+      if (!isOwn) {
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'msg-avatar';
+        avatarDiv.style.display = 'flex';
+        avatarDiv.style.alignItems = 'center';
+        avatarDiv.style.justifyContent = 'center';
+        avatarDiv.style.background = 'var(--gradient-primary)';
+        avatarDiv.style.color = 'white';
+        avatarDiv.style.fontWeight = '700';
+        avatarDiv.style.fontSize = '0.75rem';
+        avatarDiv.style.borderRadius = '6px';
+        avatarDiv.style.width = '24px';
+        avatarDiv.style.height = '24px';
+        avatarDiv.style.textTransform = 'uppercase';
+        avatarDiv.style.overflow = 'hidden';
+        avatarDiv.style.flexShrink = '0';
+        avatarDiv.addEventListener('click', () => {
+          window.location.href = `/user-details.html?id=${m.senderId}`;
+        });
+
+        if (m.senderAvatar) {
+          const avatarImg = document.createElement('img');
+          avatarImg.src = m.senderAvatar;
+          avatarImg.style.width = '100%';
+          avatarImg.style.height = '100%';
+          avatarImg.style.objectFit = 'cover';
+          avatarImg.style.borderRadius = 'inherit';
+          avatarDiv.appendChild(avatarImg);
+        } else {
+          avatarDiv.textContent = m.senderName.charAt(0);
+        }
+        msgDiv.appendChild(avatarDiv);
+      }
+
+      const bubbleDiv = document.createElement('div');
+      bubbleDiv.className = 'msg-bubble';
+
+      if (!isOwn) {
+        const senderNameDiv = document.createElement('div');
+        senderNameDiv.className = 'msg-sender';
+        senderNameDiv.textContent = m.senderName;
+        bubbleDiv.appendChild(senderNameDiv);
+      }
+
+      const textDiv = document.createElement('div');
+      textDiv.className = 'msg-text';
+      textDiv.textContent = m.text + ' ';
+      
+      if (m.isEdited) {
+        const editedSpan = document.createElement('span');
+        editedSpan.className = 'msg-status-tag';
+        editedSpan.textContent = '(edited)';
+        textDiv.appendChild(editedSpan);
+      }
+      bubbleDiv.appendChild(textDiv);
+
+      if (totalMP > 0) {
+        const reactionsDiv = document.createElement('div');
+        reactionsDiv.className = 'msg-reactions';
+        
+        const reactionBadge = document.createElement('div');
+        reactionBadge.className = 'reaction-badge';
+        
+        const logoImg = document.createElement('img');
+        logoImg.src = '/img/logo_small.png';
+        logoImg.alt = 'MP';
+        
+        reactionBadge.appendChild(logoImg);
+        reactionBadge.appendChild(document.createTextNode(` ${totalMP}`));
+        reactionsDiv.appendChild(reactionBadge);
+        bubbleDiv.appendChild(reactionsDiv);
+      }
+
+      const timeDiv = document.createElement('div');
+      timeDiv.className = 'msg-time';
+      timeDiv.style.fontSize = '0.65rem';
+      timeDiv.style.opacity = '0.6';
+      timeDiv.style.marginTop = '4px';
+      timeDiv.textContent = timeAgo(m.sentAt);
+      
+      bubbleDiv.appendChild(timeDiv);
+      msgDiv.appendChild(bubbleDiv);
+      container.appendChild(msgDiv);
+    });
+    
     container.scrollTop = container.scrollHeight;
-    renderIcons();
   } catch {}
 }
 
@@ -247,47 +465,69 @@ function handleMsgContextMenu(e, msgId, senderId, isOwn) {
   menu.style.top = `${e.pageY}px`;
   menu.style.left = `${e.pageX}px`;
 
-  let items = '';
-  
-  // Anyone can react (if not self)
+  // React item
   if (!isOwn) {
-    items += `
-      <div class="context-menu-item" onclick="reactToMsg(10)">
-        <span data-icon="heart"></span> React (10 MP)
-      </div>
-      <div class="context-menu-item" onclick="reactToMsg(50)">
-        <span data-icon="star"></span> Super React (50 MP)
-      </div>
-    `;
+    const reactBtn = document.createElement('div');
+    reactBtn.className = 'context-menu-item';
+    
+    const heartIcon = document.createElement('span');
+    heartIcon.setAttribute('data-icon', 'heart');
+    reactBtn.appendChild(heartIcon);
+    reactBtn.appendChild(document.createTextNode(' React (10 MP)'));
+    reactBtn.addEventListener('click', () => reactToMsg(10));
+    
+    const superReactBtn = document.createElement('div');
+    superReactBtn.className = 'context-menu-item';
+    
+    const starIcon = document.createElement('span');
+    starIcon.setAttribute('data-icon', 'star');
+    superReactBtn.appendChild(starIcon);
+    superReactBtn.appendChild(document.createTextNode(' Super React (50 MP)'));
+    superReactBtn.addEventListener('click', () => reactToMsg(50));
+    
+    menu.appendChild(reactBtn);
+    menu.appendChild(superReactBtn);
   }
 
-  // Own or Admin can edit/delete
+  // Edit item
   if (isOwn) {
-    items += `
-      <div class="context-menu-item" onclick="editMsg()">
-        <span data-icon="edit"></span> Edit Message
-      </div>
-    `;
+    const editBtn = document.createElement('div');
+    editBtn.className = 'context-menu-item';
+    
+    const editIcon = document.createElement('span');
+    editIcon.setAttribute('data-icon', 'edit');
+    editBtn.appendChild(editIcon);
+    editBtn.appendChild(document.createTextNode(' Edit Message'));
+    editBtn.addEventListener('click', editMsg);
+    
+    menu.appendChild(editBtn);
   }
 
+  // Delete item
   if (isOwn || isAdmin) {
-    items += `
-      <div class="context-menu-item danger" onclick="deleteMsg()">
-        <span data-icon="trash"></span> Delete Message
-      </div>
-    `;
+    const deleteBtn = document.createElement('div');
+    deleteBtn.className = 'context-menu-item danger';
+    
+    const trashIcon = document.createElement('span');
+    trashIcon.setAttribute('data-icon', 'trash');
+    deleteBtn.appendChild(trashIcon);
+    deleteBtn.appendChild(document.createTextNode(' Delete Message'));
+    deleteBtn.addEventListener('click', deleteMsg);
+    
+    menu.appendChild(deleteBtn);
   }
 
-  if (!items) return; // No actions available
+  if (menu.children.length === 0) return; // No actions available
 
-  menu.innerHTML = items;
   document.body.appendChild(menu);
   
   // Close menu on click elsewhere
   const close = () => { menu.remove(); document.removeEventListener('click', close); };
   setTimeout(() => document.addEventListener('click', close), 10);
   
-  renderIcons();
+  menu.querySelectorAll('[data-icon]').forEach(el => {
+    el.innerHTML = getIcon(el.getAttribute('data-icon'), 14);
+  });
 }
 
 async function reactToMsg(amount) {
@@ -338,5 +578,39 @@ async function sendMsg() {
     showToast(e.error || 'Failed to send message.', 'error');
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const backBtn = document.getElementById('btn-back-to-groups');
+  if (backBtn) {
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showGroupsList();
+    });
+  }
+
+  const sendBtn = document.getElementById('btn-send-msg');
+  if (sendBtn) {
+    sendBtn.addEventListener('click', sendMsg);
+  }
+
+  const chatInput = document.getElementById('chat-input');
+  if (chatInput) {
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMsg();
+      }
+    });
+  }
+
+  const cancelJoinBtn = document.getElementById('btn-cancel-join');
+  if (cancelJoinBtn) {
+    cancelJoinBtn.addEventListener('click', closeReasonModal);
+  }
+
+  const submitJoinBtn = document.getElementById('btn-submit-join');
+  if (submitJoinBtn) {
+    submitJoinBtn.addEventListener('click', submitJoinReason);
+  }
+});
 
 loadGroups();

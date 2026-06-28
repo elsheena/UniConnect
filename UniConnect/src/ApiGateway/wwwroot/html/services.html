@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Services — UniConnect</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/services.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="page-content" style="position:relative; overflow:hidden;">
+    <div class="hero-orb hero-orb-1" style="opacity: 0.1; width: 450px; height: 450px; top: -100px; right: -80px;"></div>
+    <div class="hero-orb hero-orb-2" style="opacity: 0.06; width: 350px; height: 350px; bottom: 80px; left: -80px;"></div>
+    
+    <div class="container" style="position:relative; z-index:1;">
+      <div class="page-header">
+        <h1><span data-icon="briefcase"></span> Services Marketplace</h1>
+        <p id="services-subtitle">Browse and book verified services, or accept offers to earn money.</p>
+      </div>
+
+      <div class="tabs" id="service-tabs">
+        <button class="tab active" onclick="switchTab('browse')">Browse Services</button>
+        <button class="tab" onclick="switchTab('bookings')">My Bookings</button>
+      </div>
+
+      <div id="tab-content">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Modal -->
+  <div class="modal-overlay" id="book-modal">
+    <div class="modal">
+      <h2 id="modal-service-name">Book Service</h2>
+      
+      <div id="modal-university-group" class="form-group" style="display:none;">
+        <label for="modal-university">Select Target University</label>
+        <select id="modal-university"><option value="">Choose university...</option></select>
+      </div>
+
+      <div id="modal-city-group" class="form-group" style="display:none;">
+        <label for="modal-city">Select City</label>
+        <select id="modal-city">
+          <option value="">Select city...</option>
+          <option value="Moscow">Moscow</option>
+          <option value="Saint Petersburg">Saint Petersburg</option>
+          <option value="Kazan">Kazan</option>
+          <option value="Novosibirsk">Novosibirsk</option>
+          <option value="Vladivostok">Vladivostok</option>
+          <option value="Tomsk">Tomsk</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="modal-notes">Notes / Special Requirements</label>
+        <textarea id="modal-notes" rows="3" placeholder="Tell us more about what you need..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmBooking()">Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/services.js?v=4"></script>
+</body>
+</html>

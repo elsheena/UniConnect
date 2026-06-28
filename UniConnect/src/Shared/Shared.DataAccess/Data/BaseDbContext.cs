@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Core.Models;
 using Core.Enums.Document;
 using Core.Enums.User;
+using Core.Enums.Transaction;
 using System;
 using System.Linq;
 using System.Threading;
@@ -18,6 +19,8 @@ namespace Shared.DataAccess.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<BackgroundEmail> BackgroundEmails { get; set; }
+        public DbSet<ReportedMessage> ReportedMessages { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +40,14 @@ namespace Shared.DataAccess.Data
                 entity.Property(u => u.VerificationStatus).HasConversion(
                     v => v.ToString().ToLower(),
                     v => (UserVerificationStatus)Enum.Parse(typeof(UserVerificationStatus), v, true)
+                );
+            });
+
+            modelBuilder.Entity<WalletTransaction>(entity =>
+            {
+                entity.Property(t => t.Type).HasConversion(
+                    v => v == TransactionType.MpBuy ? "mp_buy" : v.ToString().ToLower(),
+                    v => v == "mp_buy" ? TransactionType.MpBuy : (TransactionType)Enum.Parse(typeof(TransactionType), v, true)
                 );
             });
         }

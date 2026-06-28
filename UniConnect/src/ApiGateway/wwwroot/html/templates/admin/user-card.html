@@ -1,0 +1,24 @@
+<div class="card user-card-block" data-user-id="{{id}}" style="display:flex; flex-direction:column; justify-content:space-between; padding:20px; border-radius:16px; border:1px solid var(--border-subtle); background:var(--bg-card); box-shadow:var(--shadow-sm); position:relative; overflow:hidden;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+    <div>
+      <h4 style="margin:0 0 4px 0; font-size:1.05rem; font-weight:700;">
+        <a href="/user-details.html?id={{id}}" style="color:var(--text-primary); text-decoration:none; transition:color 0.2s;" class="user-card-name-link">{{fullName}}</a>
+      </h4>
+      <div style="font-size:0.8rem; color:var(--text-secondary); word-break:break-all; margin-bottom:8px;" class="user-card-email">{{email}}</div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <span class="user-card-role-badge"></span>
+      <span class="user-card-verified-badge"></span>
+    </div>
+  </div>
+  
+  <div style="border-top:1px solid var(--border-subtle); padding-top:12px; margin-top:auto; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+    <span style="color:var(--text-muted);">University:</span>
+    <strong style="color:var(--text-primary); text-align:right; max-width:70%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" class="user-card-uni-name"></strong>
+  </div>
+  
+  <div class="user-card-graduation-row" style="display:none; justify-content:space-between; align-items:center; font-size:0.8rem; margin-top:8px;">
+    <span style="color:var(--text-muted);">Graduation:</span>
+    <strong style="color:var(--text-primary); text-align:right;" class="user-card-grad-date"></strong>
+  </div>
+</div>

@@ -26,7 +26,6 @@ namespace Admin.DataAccess.Data
         public DbSet<PrivateMessage> PrivateMessages { get; set; }
         public DbSet<GroupMessage> GroupMessages { get; set; }
         public DbSet<GroupRequest> GroupRequests { get; set; }
-        public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<University> Universities { get; set; }
         public DbSet<Program> Programs { get; set; }
@@ -66,13 +65,7 @@ namespace Admin.DataAccess.Data
                 );
             });
 
-            modelBuilder.Entity<WalletTransaction>(entity =>
-            {
-                entity.Property(t => t.Type).HasConversion(
-                    v => v == TransactionType.MpBuy ? "mp_buy" : v.ToString().ToLower(),
-                    v => v == "mp_buy" ? TransactionType.MpBuy : (TransactionType)Enum.Parse(typeof(TransactionType), v, true)
-                );
-            });
+
 
             modelBuilder.Entity<GroupRequest>(entity =>
             {

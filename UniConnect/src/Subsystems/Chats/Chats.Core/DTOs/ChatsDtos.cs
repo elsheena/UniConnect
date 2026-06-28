@@ -10,6 +10,8 @@ namespace Chats.Core.DTOs
 
     public record GroupJoinDto(string? Reason);
 
+    public record ReportMessageDto(Guid ChatId, string ChatType, string Reason);
+
     public record AddGroupDto(
         string Name,
         string Flag,

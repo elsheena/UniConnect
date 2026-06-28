@@ -176,5 +176,22 @@ namespace Chats.API.Controllers
 
             return Ok(new { message = "Reacted.", newBalance = result.NewBalance });
         }
+
+        // POST /api/chats/messages/{msgId}/report
+        [HttpPost("messages/{msgId}/report")]
+        public async Task<IActionResult> ReportMessage(Guid msgId, [FromBody] ReportMessageDto dto)
+        {
+            var userIdVal = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var reporterName = User.FindFirstValue(ClaimTypes.Name) ?? "User";
+            if (userIdVal == null || !Guid.TryParse(userIdVal, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _chatService.ReportMessageAsync(msgId, userId, reporterName, dto.ChatId, dto.ChatType, dto.Reason);
+            if (!result.Success) return BadRequest(new { error = result.Error });
+
+            return Ok(new { message = "Message reported successfully." });
+        }
     }
 }

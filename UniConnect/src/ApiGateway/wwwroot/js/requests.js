@@ -35,7 +35,7 @@ async function loadTabContent(tab) {
           const iconHtml = getIcon(b.serviceIcon, 24);
           const notesText = b.notes ? ' • "' + b.notes + '"' : '';
           const detailsText = `Requested by ${b.bookerName} • ${b.universityName || 'Your university'}${notesText}`;
-          const actionButtonsHtml = `<button class="btn btn-sm btn-success" onclick="acceptOffer(${b.id})">Accept</button>`;
+          const actionButtonsHtml = `<button class="btn btn-sm btn-success" onclick="acceptOffer('${b.id}')">Accept</button>`;
 
           return renderTemplate(itemTemplate, {
             iconHtml,
@@ -67,7 +67,7 @@ async function loadTabContent(tab) {
           if (b.status === 'accepted') {
             actionButtonsHtml = `
               <a href="/chats.html?bookingId=${b.id}" class="btn btn-sm btn-secondary">Chat</a>
-              <button class="btn btn-sm btn-success" onclick="completeBooking(${b.id})">Complete</button>
+              <button class="btn btn-sm btn-success" onclick="completeBooking('${b.id}')">Complete</button>
             `;
           }
 

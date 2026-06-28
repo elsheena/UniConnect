@@ -89,9 +89,9 @@ async function loadTabContent(tab) {
           
           let actionButtonsHtml = '';
           if (b.status === 'accepted') {
-            actionButtonsHtml = `<button class="btn btn-sm btn-success" onclick="completeBooking(${b.id})">Complete</button>`;
+            actionButtonsHtml = `<button class="btn btn-sm btn-success" onclick="completeBooking('${b.id}')">Complete</button>`;
           } else if (b.status === 'open') {
-            actionButtonsHtml = `<button class="btn btn-sm btn-secondary" onclick="cancelBooking(${b.id})">Cancel</button>`;
+            actionButtonsHtml = `<button class="btn btn-sm btn-secondary" onclick="cancelBooking('${b.id}')">Cancel</button>`;
           }
 
           return renderTemplate(itemTemplate, {

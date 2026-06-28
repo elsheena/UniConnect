@@ -57,7 +57,7 @@ namespace Chats.API.Controllers
 
         // POST /api/groups/:id/join
         [HttpPost("{id}/join")]
-        public async Task<IActionResult> JoinGroup(Guid id, [FromBody] GroupJoinDto dto)
+        public async Task<IActionResult> JoinGroup(Guid id, [FromBody] GroupJoinDto? dto)
         {
             var userIdVal = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdVal == null || !Guid.TryParse(userIdVal, out var userId))
@@ -65,7 +65,7 @@ namespace Chats.API.Controllers
                 return Unauthorized();
             }
 
-            var result = await _groupService.JoinGroupAsync(id, userId, dto);
+            var result = await _groupService.JoinGroupAsync(id, userId, dto ?? new GroupJoinDto(null));
             if (!result.Success)
             {
                 if (result.Error.Contains("not found")) return NotFound(new { error = result.Error });

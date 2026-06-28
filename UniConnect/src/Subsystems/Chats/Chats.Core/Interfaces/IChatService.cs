@@ -13,5 +13,6 @@ namespace Chats.Core.Interfaces
         Task<(bool Success, string Error, PrivateMessage? Message)> EditMessageAsync(Guid chatId, Guid msgId, Guid userId, string currentUserRole, string text);
         Task<(bool Success, string Error)> DeleteMessageAsync(Guid chatId, Guid msgId, Guid userId, string currentUserRole);
         Task<(bool Success, string Error, int NewBalance)> ReactToMessageAsync(Guid chatId, Guid msgId, Guid userId, int amount);
+        Task<(bool Success, string Error)> ReportMessageAsync(Guid messageId, Guid reporterId, string reporterName, Guid chatId, string chatType, string reason);
     }
 }

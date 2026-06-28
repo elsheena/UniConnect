@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Tests — UniConnect Platform</title>
+  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/tests.css?v=4">
+</head>
+<body class="sidebar-layout">
+  <div id="sidebar-container"></div>
+
+  <main class="page-content">
+    <div class="page-header">
+      <h1>System Integration Tests</h1>
+      <p>Execute and monitor UniConnect's end-to-end subsystem integration scenarios.</p>
+    </div>
+
+    <!-- Controls & Status Bar -->
+    <div class="card-static tests-header-card">
+      <div>
+        <button id="run-btn" class="btn btn-primary btn-sm">
+          <span id="run-icon">▶</span> <span id="run-text">Run Integration Tests</span>
+        </button>
+      </div>
+      <div class="tests-meta">
+        <div class="meta-item">
+          <span>Status:</span>
+          <span id="status-badge" class="badge badge-gray">Idle</span>
+        </div>
+        <div class="meta-item">
+          <span>Duration:</span>
+          <span id="timer-display">0.0s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Pipeline -->
+    <div class="card-static card-padded tests-timeline-card">
+      <div class="timeline">
+        <div class="timeline-step" id="step-1">
+          <div class="step-circle">1</div>
+          <span class="step-label">Setup Mock Entities</span>
+        </div>
+        <div class="timeline-step" id="step-2">
+          <div class="step-circle">2</div>
+          <span class="step-label">Application Outbox Pipeline</span>
+        </div>
+        <div class="timeline-step" id="step-3">
+          <div class="step-circle">3</div>
+          <span class="step-label">Passport & Avatar Approvals</span>
+        </div>
+        <div class="timeline-step" id="step-4">
+          <div class="step-circle">4</div>
+          <span class="step-label">Student Card Role Promotion</span>
+        </div>
+        <div class="timeline-step" id="step-5">
+          <div class="step-circle">5</div>
+          <span class="step-label">Wallet MP Ledger Modifications</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal Output -->
+    <div class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <div class="terminal-dot red"></div>
+          <div class="terminal-dot yellow"></div>
+          <div class="terminal-dot green"></div>
+        </div>
+        <div class="terminal-title">integration-test-runner.log</div>
+        <div>
+          <button id="clear-btn" class="btn btn-secondary btn-sm btn-clear-term">Clear</button>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminal">
+        <div class="term-line term-bold">Ready to run integration tests. Click the "Run Integration Tests" button above.</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/icons.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/sidebar.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/tests.js?v=4"></script>
+</body>
+</html>
