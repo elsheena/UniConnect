@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: uniconnect-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: uniconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d uniconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - uniconnect-net
+
+  uniconnect-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_PATH: src/Subsystems/Auth/Auth.API/Auth.API.csproj
+    container_name: uniconnect-auth
+    ports:
+      - "3001:3001"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=uniconnect-db;Database=uniconnect;Username=postgres;Password=123
+    volumes:
+      - dp-keys:/tmp/uniconnect-keys
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["dotnet", "Auth.API.dll"]
+    networks:
+      - uniconnect-net
+
+  uniconnect-chats:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_PATH: src/Subsystems/Chats/Chats.API/Chats.API.csproj
+    container_name: uniconnect-chats
+    ports:
+      - "3002:3002"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=uniconnect-db;Database=uniconnect;Username=postgres;Password=123
+    volumes:
+      - dp-keys:/tmp/uniconnect-keys
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["dotnet", "Chats.API.dll"]
+    networks:
+      - uniconnect-net
+
+  uniconnect-files:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_PATH: src/Subsystems/Files/Files.API/Files.API.csproj
+    container_name: uniconnect-files
+    ports:
+      - "3003:3003"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=uniconnect-db;Database=uniconnect;Username=postgres;Password=123
+    volumes:
+      - dp-keys:/tmp/uniconnect-keys
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["dotnet", "Files.API.dll"]
+    networks:
+      - uniconnect-net
+
+  uniconnect-bookings:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_PATH: src/Subsystems/Bookings/Bookings.API/Bookings.API.csproj
+    container_name: uniconnect-bookings
+    ports:
+      - "3004:3004"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=uniconnect-db;Database=uniconnect;Username=postgres;Password=123
+    volumes:
+      - dp-keys:/tmp/uniconnect-keys
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["dotnet", "Bookings.API.dll"]
+    networks:
+      - uniconnect-net
+
+  uniconnect-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_PATH: src/Subsystems/Admin/Admin.API/Admin.API.csproj
+    container_name: uniconnect-admin
+    ports:
+      - "3005:3005"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=uniconnect-db;Database=uniconnect;Username=postgres;Password=123
+    volumes:
+      - dp-keys:/tmp/uniconnect-keys
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["dotnet", "Admin.API.dll"]
+    networks:
+      - uniconnect-net
+
+  uniconnect-notifications:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_PATH: src/NotificationWorker/NotificationWorker.csproj
+    container_name: uniconnect-notifications
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=uniconnect-db;Database=uniconnect;Username=postgres;Password=123
+      - EMAIL_PROVIDER=FAILOVER
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["dotnet", "NotificationWorker.dll"]
+    networks:
+      - uniconnect-net
+
+  uniconnect-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_PATH: src/ApiGateway/ApiGateway.csproj
+    container_name: uniconnect-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - DOTNET_RUNNING_IN_CONTAINER=true
+    depends_on:
+      - uniconnect-auth
+      - uniconnect-chats
+      - uniconnect-files
+      - uniconnect-bookings
+      - uniconnect-admin
+    entrypoint: ["dotnet", "ApiGateway.dll"]
+    networks:
+      - uniconnect-net
+
+volumes:
+  db-data:
+  dp-keys:
+
+networks:
+  uniconnect-net:
+    driver: bridge

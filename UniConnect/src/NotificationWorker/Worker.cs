@@ -54,6 +54,14 @@ namespace NotificationWorker
             using (var scope = _scopeFactory.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AdminDbContext>();
+                try
+                {
+                    await db.Database.EnsureCreatedAsync(stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Database initialization checked; tables may already exist.");
+                }
                 
                 var unsentEmails = await db.BackgroundEmails
                      .Where(e => !e.Sent)

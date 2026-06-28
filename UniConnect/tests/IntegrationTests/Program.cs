@@ -13,9 +13,9 @@ using Core.Enums.User;
 using Admin.Core.DTOs;
 using Admin.BLL.Services;
 using Admin.DataAccess.Data;
-using Services.BLL.Services;
-using Services.DataAccess;
-using Services.Core.DTOs;
+using Bookings.BLL.Services;
+using Bookings.DataAccess;
+using Bookings.Core.DTOs;
 using Shared.Core.Interfaces;
 using Core.Models;
 
@@ -37,8 +37,8 @@ namespace IntegrationTests
             db.Database.OpenConnection();
             var connection = db.Database.GetDbConnection();
             
-            var servicesOptionsBuilder = new DbContextOptionsBuilder<ServicesDbContext>().UseNpgsql(connection);
-            using var servicesDb = new ServicesDbContext(servicesOptionsBuilder.Options);
+            var bookingsOptionsBuilder = new DbContextOptionsBuilder<BookingsDbContext>().UseNpgsql(connection);
+            using var servicesDb = new BookingsDbContext(bookingsOptionsBuilder.Options);
 
             Console.WriteLine("Connecting to PostgreSQL...");
             try
